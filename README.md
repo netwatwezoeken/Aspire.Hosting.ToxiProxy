@@ -109,7 +109,7 @@ builder.Build().Run();
 ## Testing
 
 The `test` folder of this repository contains a Aspire AppHost project with a WeatherApi a DemoApi and the ToxiProxy in between them:
-:::mermaid
+```mermaid
 flowchart TD
     D[DemoApi] --> T[ToxiProxy]
     T --> W[WeatherApi]
@@ -117,7 +117,7 @@ flowchart TD
     style D fill:#0f766e,color:#fff,stroke:#134e4a
     style T fill:#2563eb,color:#fff,stroke:#1d4ed8
     style W fill:#f59e0b,color:#111827,stroke:#d97706
-:::
+```
 
 There are tests, that both make use of the aspire apphost:
 1. A test to confirm if services are wired up correctly.
