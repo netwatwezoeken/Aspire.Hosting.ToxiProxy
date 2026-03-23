@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>Aspire.Hosting.ToxiProxy</RootNamespace>
+        <IsPackable>true</IsPackable>
+        <PackageId>Nwwz.Aspire.Hosting.ToxiProxy</PackageId>
+        <PackageOutputPath>./nupkg</PackageOutputPath>
+        <IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
+        <Description>A Aspire hosting integration for Toxiproxy</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Aspire.Hosting" Version="13.1.3" />
+      <PackageReference Include="Refit" Version="10.1.6" />
+    </ItemGroup>
+
+</Project>

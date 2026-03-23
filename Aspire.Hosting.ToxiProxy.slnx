@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Aspire.Hosting.ToxiProxy/Aspire.Hosting.ToxiProxy.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/AppHost/AppHost.csproj" />
+    <Project Path="test/DemoApi/DemoApi.csproj" />
+    <Project Path="test/ServiceDefaults/ServiceDefaults.csproj" />
+    <Project Path="test/Tests/Tests.csproj" />
+    <Project Path="test\WeatherApi\WeatherApi.csproj" />
+  </Folder>
+</Solution>
