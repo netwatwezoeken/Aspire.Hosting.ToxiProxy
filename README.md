@@ -5,6 +5,8 @@ Aspire.Hosting.ToxiProxy is a .NET Aspire component that integrates [ToxiProxy](
 🚨Looking for feedback! 🚨
 Before I spend time on further completing the functionality I prefer wom feedback. Just submit an issue. But before you do, please read this document to the end please.
 
+### Nuget: [Nwwz.Aspire.Hosting.ToxiProxy](https://www.nuget.org/packages/Nwwz.Aspire.Hosting.ToxiProxy/)
+
 ## Available methods
 
 ### `AddToxiProxyServer`
