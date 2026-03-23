@@ -7,6 +7,7 @@
         <RootNamespace>Aspire.Hosting.ToxiProxy</RootNamespace>
         <IsPackable>true</IsPackable>
         <PackageOutputPath>./nupkg</PackageOutputPath>
+        <PackageId>Nwwz.Aspire.Hosting.ToxiProxy</PackageId>
         <IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
         <Description>A Aspire hosting integration for Toxiproxy</Description>
     </PropertyGroup>
