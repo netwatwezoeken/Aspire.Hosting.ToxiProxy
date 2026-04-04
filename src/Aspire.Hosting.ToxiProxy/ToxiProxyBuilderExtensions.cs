@@ -1,5 +1,3 @@
-using System.Net;
-using System.Net.Sockets;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.ToxiProxy.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,20 +31,8 @@ public static class ToxiProxyBuilderExtensions
             .WithArgs("-host", "0.0.0.0")
             .WithImage(ToxyProxyContainerImageTags.Image, ToxyProxyContainerImageTags.Tag)
             .WithImageRegistry(ToxyProxyContainerImageTags.Registry)
-            .WithIconName("DatabaseMultiple")
+            .WithIconName("ArrowCircleDownUp")
             .WithHttpHealthCheck("/proxies")
-            // .OnResourceEndpointsAllocated((resource, @event, arg3) =>
-            // {
-            //     foreach (var proxy in resource.HttpEndPointResources)
-            //     {
-            //         var endpointAnnotation = resource.Annotations.OfType<EndpointAnnotation>().FirstOrDefault(a => a.Name == proxy.Name);
-            //         if (endpointAnnotation != null)
-            //         {
-            //             endpointAnnotation.AllocatedEndpoint = new AllocatedEndpoint(endpointAnnotation, "localhost", proxy.Port);
-            //         }
-            //     }
-            //     return Task.FromResult(resource);
-            // })
             .OnResourceReady(async (toxiproxy, evt, cancellationToken) =>
             {
                 foreach (var proxy in toxiproxy.HttpEndPointResources)
@@ -86,8 +72,6 @@ public static class ToxiProxyBuilderExtensions
                             ), proxy.Name);
                         }
                     }
-                    var t = await client.GetProxies();
-                    var proxies = t.ToProxies();
                 }
             });
     }
@@ -115,8 +99,7 @@ public static class ToxiProxyBuilderExtensions
             {
                 var toxiProxyUrl = builder.Resource.PrimaryEndpoint.Url;
                 var client = RestService.For<IToxiClient>(toxiProxyUrl);
-                var t = await client.GetProxies();
-                var proxies = t.ToProxies();
+                var result = await client.GetProxies();
                 return HealthCheckResult.Healthy();
             });
         
@@ -124,17 +107,7 @@ public static class ToxiProxyBuilderExtensions
             .AddResource(httpEndpoint)
             .WithHealthCheck(healthCheckKey)
             .WithEndpoint(targetPort: port, name: ExternalHttpEndpointResource.PrimaryEndpointName, scheme: "http", isExternal: true, isProxied:false)
-            .WithUrlForEndpoint(ExternalHttpEndpointResource.PrimaryEndpointName, (EndpointReference _) => new ResourceUrlAnnotation { Url = "http://gogl.com" })
-            .WithUrl($"http://localhost{port.ToString()}")
-            .OnInitializeResource( (builder2, @event, arg3) =>
-            {
-                return Task.FromResult(builder2);
-            })
-            .OnResourceReady(async (resource, evt, cancellationToken) =>
-            {
-                var t = resource.Annotations;
-                var e = resource.GetEndpoints();
-            });
+            .WithIconName("ArrowCircleDown");
     }
     
     /// <summary>
@@ -218,8 +191,9 @@ public static class ToxiProxyBuilderExtensions
 
         builder.WithEnvironment(async context =>
         {
-            context.EnvironmentVariables[$"services__{endpointReference.Resource.ProxiedService}__http__0"] = "http://localhost:8666";
-            context.EnvironmentVariables["discoveryEnvVarName"] = "jos";
+            var proxiedServiceName = endpointReference.Resource.ProxiedService;
+            var port = endpointReference.Resource.Port;
+            context.EnvironmentVariables[$"services__{proxiedServiceName}__http__0"] = $"http://localhost:{port}";
         });
         return builder;
     }

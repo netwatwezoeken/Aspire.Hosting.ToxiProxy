@@ -20,8 +20,6 @@ public class ToxicHttpEndPointResource
 
     public string ProxiedService { get ; set ; }
 
-    public int TargetPort { get ; set ; }
-
     public int Port { get ; set ; }
 
     public EndpointReference PrimaryEndpoint { get; }

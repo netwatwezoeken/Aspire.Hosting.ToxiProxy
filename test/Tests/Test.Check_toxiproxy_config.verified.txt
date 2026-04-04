@@ -13,25 +13,16 @@
         name: latency,
         type: latency,
         stream: upstream,
-        toxicity: 0.45
+        toxicity: 0.8
       },
       {
         attributes: {
           rate: 142
         },
-        name: bandwidth-2,
-        type: bandwidth,
-        stream: upstream,
-        toxicity: 0.9
-      },
-      {
-        attributes: {
-          rate: 321
-        },
-        name: bandwidth-1,
+        name: bandwidth,
         type: bandwidth,
         stream: downstream,
-        toxicity: 0.25
+        toxicity: 0.9
       }
     ]
   },

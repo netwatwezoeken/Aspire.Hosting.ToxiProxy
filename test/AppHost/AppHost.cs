@@ -9,9 +9,8 @@ var proxy = builder.AddToxiProxyServer("toxiproxy", 8474);
         .WithNewUi();
 
 var toxicWeatherApi = proxy.AddHttpProxy("apiProxy", 8666, weatherapi)
-    .AddLatency("latency",123, 0, 0.45, Direction.Upstream)
-    .AddBandwidthLimit("bandwidth-1",321, 0.25, Direction.Downstream)
-    .AddBandwidthLimit("bandwidth-2",142, 0.9, Direction.Upstream);
+    .AddLatency("latency",123, 0, 0.8, Direction.Upstream)
+    .AddBandwidthLimit("bandwidth",142, 0.9, Direction.Downstream);
 
 var toxicWeatherApi2 = proxy.AddHttpProxy("otherProxy", 8667, weatherapi)
     .AddLatency("latency",1000);
