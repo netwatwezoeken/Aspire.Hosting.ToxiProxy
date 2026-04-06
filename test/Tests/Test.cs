@@ -37,7 +37,8 @@ public class Test : IAsyncLifetime
                 [
                     "DcpPublisher:RandomizePorts=false",
                     "ASPNETCORE_URLS=http://localhost:18888",
-                    "ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS=true"
+                    "ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS=true",
+                    "TEST_RUN=true"
                 ],
                 configureBuilder: (appOptions, hostSettings) =>
                 {

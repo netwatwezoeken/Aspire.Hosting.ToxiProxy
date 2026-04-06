@@ -14,6 +14,10 @@ public class ToxiProxyResource : ContainerResource
     public EndpointReference PrimaryEndpoint { get; }
     
     private readonly List<ToxicHttpEndPointResource> _httpEndPointResources = [];
+    private readonly List<ToxicConnectionStringResource> _connectionsStringResources = [];
+
+    internal IReadOnlyList<ToxicHttpEndPointResource> HttpEndPointResources => _httpEndPointResources;
+    internal IReadOnlyList<ToxicConnectionStringResource> ConnectionStringResources => _connectionsStringResources;
     
     internal void AddHttpProxy(ToxicHttpEndPointResource toxicHttpEndpoint)
     {
@@ -27,6 +31,17 @@ public class ToxiProxyResource : ContainerResource
             port: toxicHttpEndpoint.Port,
             targetPort: toxicHttpEndpoint.Port));
     }
-
-    internal IReadOnlyList<ToxicHttpEndPointResource> HttpEndPointResources => _httpEndPointResources;
+    
+    internal void AddConnectionStringProxy(ToxicConnectionStringResource toxicConnectionString)
+    {
+        _connectionsStringResources.Add(toxicConnectionString);
+        // Add the endpoint to ToxiProxyResource so it appears in the dashboard
+        
+        Annotations.Add(new EndpointAnnotation(
+            System.Net.Sockets.ProtocolType.Tcp,
+            uriScheme: "tcp",
+            name: toxicConnectionString.Name,
+            port: toxicConnectionString.Port,
+            targetPort: toxicConnectionString.Port));
+    }
 }

@@ -43,5 +43,11 @@
         toxicity: 1
       }
     ]
+  },
+  sqlProxy: {
+    name: sqlProxy,
+    listen: [::]:8668,
+    upstream: host.docker.internal:65432,
+    enabled: true
   }
 }

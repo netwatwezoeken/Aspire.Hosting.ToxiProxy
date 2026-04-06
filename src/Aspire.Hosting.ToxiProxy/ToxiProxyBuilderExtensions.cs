@@ -35,7 +35,7 @@ public static class ToxiProxyBuilderExtensions
             .WithHttpHealthCheck("/proxies")
             .OnResourceReady(async (toxiproxy, evt, cancellationToken) =>
             {
-                foreach (var proxy in toxiproxy.HttpEndPointResources)
+                foreach (var proxy in toxiproxy.ConnectionStringResources)
                 {
                     var toxiProxyUrl = proxy.Parent.PrimaryEndpoint.Url;
                     var client = RestService.For<IToxiClient>(toxiProxyUrl);
@@ -44,38 +44,56 @@ public static class ToxiProxyBuilderExtensions
                         proxy.Name,
                         true,
                         $"0.0.0.0:{proxy.Port}",
-                        $"host.docker.internal:{proxy.TargetResource.Resource.GetEndpoint("http").Port}"
-                        ));
-                    foreach (var toxicResource in proxy.ToxiResources)
-                    {
-                        var toxic = toxicResource.Toxic;
-                        if (toxic.Type == ToxicType.Latency)
-                        {
-                            await client.AddToxic(new Client.Toxic(
-                                new Attributes(
-                                    Latency: toxic.Parameters.Latency, 
-                                    Jitter: toxic.Parameters.Jitter),
-                                toxicResource.Name,
-                                ToxicType.Latency,
-                                toxic.Direction == Direction.Downstream ? Stream.Downstream : Stream.Upstream,
-                                toxic.Toxicity
-                            ), proxy.Name);
-                        } else if (toxic.Type == ToxicType.Bandwidth)
-                        {
-                            await client.AddToxic(new Client.Toxic(
-                                new Attributes(
-                                    Rate: toxic.Parameters.Bandwidth),
-                                toxicResource.Name,
-                                ToxicType.Bandwidth,
-                                toxic.Direction == Direction.Downstream ? Stream.Downstream : Stream.Upstream,
-                                toxic.Toxicity
-                            ), proxy.Name);
-                        }
-                    }
+                        $"host.docker.internal:{proxy.TargetPort}"
+                    ));
+                }
+
+                foreach (var proxy in toxiproxy.HttpEndPointResources)
+                {
+                    await ConfigureToxicProxy(proxy, proxy.TargetResource.Resource.GetEndpoint("http").Port);
                 }
             });
     }
-    
+
+    private static async Task ConfigureToxicProxy(ToxicHttpEndPointResource proxy, int port)
+    {
+        var toxiProxyUrl = proxy.Parent.PrimaryEndpoint.Url;
+        var client = RestService.For<IToxiClient>(toxiProxyUrl);
+
+        await client.CreateProxy(new Proxy(
+            proxy.Name,
+            true,
+            $"0.0.0.0:{proxy.Port}",
+            $"host.docker.internal:{port}"
+        ));
+        foreach (var toxicResource in proxy.ToxiResources)
+        {
+            var toxic = toxicResource.Toxic;
+            if (toxic.Type == ToxicType.Latency)
+            {
+                await client.AddToxic(new Client.Toxic(
+                    new Attributes(
+                        Latency: toxic.Parameters.Latency, 
+                        Jitter: toxic.Parameters.Jitter),
+                    toxicResource.Name,
+                    ToxicType.Latency,
+                    toxic.Direction == Direction.Downstream ? Stream.Downstream : Stream.Upstream,
+                    toxic.Toxicity
+                ), proxy.Name);
+            } else if (toxic.Type == ToxicType.Bandwidth)
+            {
+                await client.AddToxic(new Client.Toxic(
+                    new Attributes(
+                        Rate: toxic.Parameters.Bandwidth),
+                    toxicResource.Name,
+                    ToxicType.Bandwidth,
+                    toxic.Direction == Direction.Downstream ? Stream.Downstream : Stream.Upstream,
+                    toxic.Toxicity
+                ), proxy.Name);
+            }
+        }
+    }
+
     /// <summary>
     /// Adds a http proxy resource for a specific service.
     /// </summary>
@@ -108,6 +126,51 @@ public static class ToxiProxyBuilderExtensions
             .WithHealthCheck(healthCheckKey)
             .WithEndpoint(targetPort: port, name: ExternalHttpEndpointResource.PrimaryEndpointName, scheme: "http", isExternal: true, isProxied:false)
             .WithIconName("ArrowCircleDown");
+    }
+    
+    /// <summary>
+    /// Adds a http proxy resource for a specific service.
+    /// </summary>
+    /// <param name="builder">The <see cref="IResourceBuilder{ToxiProxyResource}"/>.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="port">New port for the proxy to listen on.</param>
+    /// <param name="targetResourceBuilder">Name of the service that is proxied.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{ToxicConnectionStringResource}"/>.</returns>
+    public static IResourceBuilder<ToxicConnectionStringResource> AddConnectionStringProxy(this IResourceBuilder<ToxiProxyResource> builder, [ResourceName] string name, int port, IResourceBuilder<IResourceWithConnectionString> targetResourceBuilder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        string? connectionString = null;
+        
+        var connectionStringResource = new ToxicConnectionStringResource(name, builder.Resource, port, targetResourceBuilder);
+        builder.Resource.AddConnectionStringProxy(connectionStringResource);
+        
+        targetResourceBuilder.OnConnectionStringAvailable(async (targetConnectionString, @event, ct) =>
+        {
+            if (targetResourceBuilder.Resource is IResourceWithParent resource)
+            {
+                if (resource.Parent.TryGetEndpoints(out var endpoints))
+                {
+                    var targetPort = endpoints?.FirstOrDefault()?.AllocatedEndpoint?.Port;
+                    if(targetPort == null)
+                        throw new DistributedApplicationException($"Could not get target port.");
+
+                    connectionStringResource.TargetPort = (int)targetPort;   
+                }
+            }
+            
+            connectionString = await targetConnectionString.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false);
+
+            if (connectionString == null)
+            {
+                throw new DistributedApplicationException($"ConnectionStringAvailableEvent was published for the '{name}' resource but the connection string was null.");
+            }
+                
+            connectionStringResource.ConnectionStringExpression = ReferenceExpression.Create($"{connectionString.Replace($"{connectionStringResource.TargetPort};", $"{port};")}");
+        });
+        
+        return builder.ApplicationBuilder
+            .AddResource(connectionStringResource);
     }
     
     /// <summary>
