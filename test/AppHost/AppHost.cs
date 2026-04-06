@@ -1,31 +1,25 @@
 using Aspire.Hosting.ToxiProxy;
 
 var builder = DistributedApplication.CreateBuilder(args);
-var testRun = GetBoolArg(args, "TEST_RUN");
+var isTestRun = GetBoolArg(args, "TEST_RUN");
 
 var weatherapi =  builder.AddProject<Projects.WeatherApi>("weatherapi");
 
-var sqlbuilder = builder.AddSqlServer(
-        "sql-server",
-        builder.AddParameter("sql-server-password", secret: true))
-    .WithLifetime(ContainerLifetime.Persistent);
-var sqlServer = sqlbuilder;
-// set port for deterministic test behavior
-if (testRun)
-{
-    sqlServer = sqlbuilder.WithHostPort(65432);
-}
-var sql = sqlServer.AddDatabase("SqlDatabase");
+var mssql = BuildMsSql(builder);
+
+var pgsql = BuildPgSql(builder);
 
 var proxy = builder.AddToxiProxyServer("toxiproxy", 8474);
 // no UI improves test performance
-if (!testRun)
+if (!isTestRun)
 {
     proxy.WithNewUi();
     proxy.WithUi();
 }
 
-var toxicSql = proxy.AddConnectionStringProxy("sqlProxy", 8668, sql);
+var toxicMsSql = proxy.AddConnectionStringProxy("mssqlProxy", 8668, mssql);
+
+var toxicPgSql = proxy.AddConnectionStringProxy("pgsqlProxy", 8669, pgsql);
 
 var toxicWeatherApi = proxy.AddHttpProxy("apiProxy", 8666, weatherapi)
     .AddLatency("latency",123, 0, 0.8, Direction.Upstream)
@@ -36,11 +30,13 @@ var toxicWeatherApi2 = proxy.AddHttpProxy("otherProxy", 8667, weatherapi)
 
 builder.AddProject<Projects.DemoApi>("demoapi")
     .WithReference(toxicWeatherApi)
-    .WithReference(toxicSql)
+    .WithReference(toxicMsSql)
+    .WithReference(toxicPgSql)
     .WaitFor(toxicWeatherApi)
     .WithUrlForEndpoint("http", ep => new() { Url = $"/forecast", DisplayText = "Forecast" });
     
 builder.Build().Run();
+return;
 
 static bool GetBoolArg(string[] args, string name, bool defaultValue = false)
 {
@@ -55,4 +51,33 @@ static bool GetBoolArg(string[] args, string name, bool defaultValue = false)
     }
 
     return defaultValue;
+}
+
+IResourceBuilder<SqlServerDatabaseResource> BuildMsSql(IDistributedApplicationBuilder distributedApplicationBuilder)
+{
+    var sqlbuilder = distributedApplicationBuilder.AddSqlServer(
+            "sql-server",
+            distributedApplicationBuilder.AddParameter("sql-server-password", secret: true))
+        .WithLifetime(ContainerLifetime.Persistent);
+    var sqlServer = sqlbuilder;
+    // set port for deterministic test behavior
+    if (isTestRun)
+    {
+        sqlServer = sqlbuilder.WithHostPort(65432);
+    }
+    var resourceBuilder = sqlServer.AddDatabase("SqlDatabase");
+    return resourceBuilder;
+}
+
+IResourceBuilder<PostgresDatabaseResource> BuildPgSql(IDistributedApplicationBuilder distributedApplicationBuilder)
+{
+    var postgres = distributedApplicationBuilder.AddPostgres("postgres");
+    
+    var sqlServer = postgres;
+    // set port for deterministic test behavior
+    if (isTestRun)
+    {
+        sqlServer = postgres.WithHostPort(65433);
+    }
+    return sqlServer.AddDatabase("postgresdb");
 }

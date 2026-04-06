@@ -26,6 +26,12 @@
       }
     ]
   },
+  mssqlProxy: {
+    name: mssqlProxy,
+    listen: [::]:8668,
+    upstream: host.docker.internal:65432,
+    enabled: true
+  },
   otherProxy: {
     name: otherProxy,
     listen: [::]:8667,
@@ -44,10 +50,10 @@
       }
     ]
   },
-  sqlProxy: {
-    name: sqlProxy,
-    listen: [::]:8668,
-    upstream: host.docker.internal:65432,
+  pgsqlProxy: {
+    name: pgsqlProxy,
+    listen: [::]:8669,
+    upstream: host.docker.internal:65433,
     enabled: true
   }
 }
