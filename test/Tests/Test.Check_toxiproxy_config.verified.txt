@@ -21,7 +21,7 @@
         },
         name: bandwidth,
         type: bandwidth,
-        stream: downstream,
+        stream: upstream,
         toxicity: 0.9
       }
     ]
@@ -30,30 +30,51 @@
     name: mssqlProxy,
     listen: [::]:8668,
     upstream: host.docker.internal:65432,
-    enabled: true
-  },
-  otherProxy: {
-    name: otherProxy,
-    listen: [::]:8667,
-    upstream: host.docker.internal:5103,
     enabled: true,
     toxics: [
       {
         attributes: {
-          latency: 1000,
+          latency: 150,
           jitter: 0
         },
         name: latency,
         type: latency,
         stream: downstream,
-        toxicity: 1
+        toxicity: 0.95
+      },
+      {
+        attributes: {
+          rate: 102
+        },
+        name: bandwidth,
+        type: bandwidth,
+        stream: downstream,
+        toxicity: 0.85
       }
     ]
+  },
+  otherProxy: {
+    name: otherProxy,
+    listen: [::]:8667,
+    upstream: host.docker.internal:5103,
+    enabled: true
   },
   pgsqlProxy: {
     name: pgsqlProxy,
     listen: [::]:8669,
     upstream: host.docker.internal:65433,
-    enabled: true
+    enabled: true,
+    toxics: [
+      {
+        attributes: {
+          latency: 123,
+          jitter: 0
+        },
+        name: latency,
+        type: latency,
+        stream: upstream,
+        toxicity: 0.75
+      }
+    ]
   }
 }

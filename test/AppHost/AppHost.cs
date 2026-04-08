@@ -17,16 +17,18 @@ if (!isTestRun)
     proxy.WithUi();
 }
 
-var toxicMsSql = proxy.AddConnectionStringProxy("mssqlProxy", 8668, mssql);
-
-var toxicPgSql = proxy.AddConnectionStringProxy("pgsqlProxy", 8669, pgsql);
-
 var toxicWeatherApi = proxy.AddHttpProxy("apiProxy", 8666, weatherapi)
     .AddLatency("latency",123, 0, 0.8, Direction.Upstream)
-    .AddBandwidthLimit("bandwidth",142, 0.9, Direction.Downstream);
+    .AddBandwidthLimit("bandwidth",142, 0.9, Direction.Upstream);
 
-var toxicWeatherApi2 = proxy.AddHttpProxy("otherProxy", 8667, weatherapi)
-    .AddLatency("latency",1000);
+var toxicMsSql = proxy.AddConnectionStringProxy("mssqlProxy", 8668, mssql)
+    .AddLatency("latency",150, 0, 0.95, Direction.Downstream)
+    .AddBandwidthLimit("bandwidth",102, 0.85, Direction.Downstream);
+
+var toxicPgSql = proxy.AddConnectionStringProxy("pgsqlProxy", 8669, pgsql)
+    .AddLatency("latency", 123, 0, 0.75, Direction.Upstream);
+
+var toxicWeatherApi2 = proxy.AddHttpProxy("otherProxy", 8667, weatherapi);
 
 builder.AddProject<Projects.DemoApi>("demoapi")
     .WithReference(toxicWeatherApi)

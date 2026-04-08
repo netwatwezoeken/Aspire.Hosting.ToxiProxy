@@ -3,7 +3,7 @@ using Aspire.Hosting.ApplicationModel;
 namespace Aspire.Hosting.ToxiProxy;
 
 public class ToxicConnectionStringResource
-    : Resource, IResourceWithParent<ToxiProxyResource>, IResourceWithConnectionString, IResourceWithWaitSupport
+    : ToxicEndpointResource, IResourceWithConnectionString, IResourceWithWaitSupport
 {
     public ToxicConnectionStringResource(string name, ToxiProxyResource parent, int port, IResourceBuilder<IResourceWithConnectionString> targetResource) : base(name)
     {
@@ -18,21 +18,9 @@ public class ToxicConnectionStringResource
     public string ProxiedService { get ; set ; }
 
     public int TargetPort { get ; set ; }
-
-    public int Port { get ; set ; }
     
-    public ToxiProxyResource Parent { get; }
-    
-    private readonly List<ToxicResource> _toxiResources = [];
     private ReferenceExpression? _connectionStringExpression;
-
-    internal void AddToxic(ToxicResource toxic)
-    {
-        _toxiResources.Add(toxic);
-    }
     
-    internal IReadOnlyList<ToxicResource> ToxiResources => _toxiResources;
-
     public ReferenceExpression ConnectionStringExpression
     {
         get => _connectionStringExpression ?? TargetResource.Resource.ConnectionStringExpression;
@@ -48,6 +36,4 @@ public class ToxicConnectionStringResource
 
         return ValueTask.FromResult<string?>(null);
     }
-    
-    
 }

@@ -13,13 +13,13 @@ public class ToxiProxyResource : ContainerResource
 
     public EndpointReference PrimaryEndpoint { get; }
     
-    private readonly List<ToxicHttpEndPointResource> _httpEndPointResources = [];
+    private readonly List<ToxicHttpEndpointResource> _httpEndPointResources = [];
     private readonly List<ToxicConnectionStringResource> _connectionsStringResources = [];
 
-    internal IReadOnlyList<ToxicHttpEndPointResource> HttpEndPointResources => _httpEndPointResources;
+    internal IReadOnlyList<ToxicHttpEndpointResource> HttpEndPointResources => _httpEndPointResources;
     internal IReadOnlyList<ToxicConnectionStringResource> ConnectionStringResources => _connectionsStringResources;
     
-    internal void AddHttpProxy(ToxicHttpEndPointResource toxicHttpEndpoint)
+    internal void AddHttpProxy(ToxicHttpEndpointResource toxicHttpEndpoint)
     {
         _httpEndPointResources.Add(toxicHttpEndpoint);
         
