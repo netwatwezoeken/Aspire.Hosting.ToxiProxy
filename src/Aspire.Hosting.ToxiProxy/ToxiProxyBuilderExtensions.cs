@@ -272,4 +272,14 @@ public static class ToxiProxyBuilderExtensions
         });
         return builder;
     }
+    
+    public static IResourceBuilder<TDestination> WithReference<TDestination>(this IResourceBuilder<TDestination> builder, IResourceBuilder<ToxicConnectionStringResource> source, string? connectionName = null, bool optional = false)
+        where TDestination : IResourceWithEnvironment
+    {
+        return ResourceBuilderExtensions.WithReference(
+            builder, 
+            source, 
+            connectionName ?? source.Resource.TargetResource.Resource.Name,
+            optional);
+    }
 }

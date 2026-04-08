@@ -5,9 +5,9 @@ var isTestRun = GetBoolArg(args, "TEST_RUN");
 
 var weatherapi =  builder.AddProject<Projects.WeatherApi>("weatherapi");
 
-var mssql = BuildMsSql(builder);
+var mssql = BuildMsSql(builder, "SqlDatabase");
 
-var pgsql = BuildPgSql(builder);
+var pgsql = BuildPgSql(builder, "postgresdb");
 
 var proxy = builder.AddToxiProxyServer("toxiproxy", 8474);
 // no UI improves test performance
@@ -55,7 +55,7 @@ static bool GetBoolArg(string[] args, string name, bool defaultValue = false)
     return defaultValue;
 }
 
-IResourceBuilder<SqlServerDatabaseResource> BuildMsSql(IDistributedApplicationBuilder distributedApplicationBuilder)
+IResourceBuilder<SqlServerDatabaseResource> BuildMsSql(IDistributedApplicationBuilder distributedApplicationBuilder, string dbname)
 {
     var sqlbuilder = distributedApplicationBuilder.AddSqlServer(
             "sql-server",
@@ -67,11 +67,11 @@ IResourceBuilder<SqlServerDatabaseResource> BuildMsSql(IDistributedApplicationBu
     {
         sqlServer = sqlbuilder.WithHostPort(65432);
     }
-    var resourceBuilder = sqlServer.AddDatabase("SqlDatabase");
+    var resourceBuilder = sqlServer.AddDatabase(dbname);
     return resourceBuilder;
 }
 
-IResourceBuilder<PostgresDatabaseResource> BuildPgSql(IDistributedApplicationBuilder distributedApplicationBuilder)
+IResourceBuilder<PostgresDatabaseResource> BuildPgSql(IDistributedApplicationBuilder distributedApplicationBuilder, string dbname)
 {
     var postgres = distributedApplicationBuilder.AddPostgres("postgres");
     
@@ -81,5 +81,5 @@ IResourceBuilder<PostgresDatabaseResource> BuildPgSql(IDistributedApplicationBui
     {
         sqlServer = postgres.WithHostPort(65433);
     }
-    return sqlServer.AddDatabase("postgresdb");
+    return sqlServer.AddDatabase(dbname);
 }
