@@ -136,6 +136,7 @@ public static class ToxiProxyBuilderExtensions
         
         var connectionStringResource = new ToxicConnectionStringResource(name, builder.Resource, port, targetResourceBuilder);
         builder.Resource.AddConnectionStringProxy(connectionStringResource);
+        builder.WaitFor(targetResourceBuilder);
         
         targetResourceBuilder.OnConnectionStringAvailable(async (targetConnectionString, @event, ct) =>
         {

@@ -3,7 +3,7 @@ using Aspire.Hosting.ApplicationModel;
 namespace Aspire.Hosting.ToxiProxy;
 
 public class ToxicHttpEndpointResource
-    : ToxicEndpointResource, IResourceWithEndpoints, IResourceWithWaitSupport
+    : ToxicEndpointResource, IResourceWithEndpoints
 {
     private const string PrimaryEndpointName = "http";
     

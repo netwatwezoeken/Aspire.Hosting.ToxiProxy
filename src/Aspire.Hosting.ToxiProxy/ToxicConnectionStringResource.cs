@@ -3,7 +3,7 @@ using Aspire.Hosting.ApplicationModel;
 namespace Aspire.Hosting.ToxiProxy;
 
 public class ToxicConnectionStringResource
-    : ToxicEndpointResource, IResourceWithConnectionString, IResourceWithWaitSupport
+    : ToxicEndpointResource, IResourceWithConnectionString
 {
     public ToxicConnectionStringResource(string name, ToxiProxyResource parent, int port, IResourceBuilder<IResourceWithConnectionString> targetResource) : base(name)
     {
