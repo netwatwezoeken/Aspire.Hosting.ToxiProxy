@@ -3,13 +3,23 @@ using Aspire.Hosting.ToxiProxy;
 var builder = DistributedApplication.CreateBuilder(args);
 var isTestRun = GetBoolArg(args, "TEST_RUN");
 
-var weatherapi =  builder.AddProject<Projects.WeatherApi>("weatherapi");
+// You can add toxicity to a EndpointResource
+var weatherapi =  builder.AddProject<Projects.WeatherApi>("weatherapi")
+    .WithToxicity("apiProxy", 8666)
+    .AddLatency("latency",123, 0, 0.8, Direction.Upstream)
+    .AddBandwidthLimit("bandwidth",142, 0.9, Direction.Upstream);
 
 var mssql = BuildMsSql(builder, "SqlDatabase");
 
-var pgsql = BuildPgSql(builder, "postgresdb");
+// You can add toxicity to a ConnectionsStringResource
+var pgsql = BuildPgSql(builder, "postgresdb")
+    .WithToxicity("pgsqlProxy", 8669)
+    .AddLatency("latency", 123, 0, 0.75, Direction.Upstream);
 
-var proxy = builder.AddToxiProxyServer("toxiproxy", 8474);
+var proxy = builder.AddToxiProxyServer("toxiproxy", 8474)
+    .With(pgsql)
+    .With(weatherapi);
+
 // no UI improves test performance
 if (!isTestRun)
 {
@@ -17,24 +27,15 @@ if (!isTestRun)
     proxy.WithUi();
 }
 
-var toxicWeatherApi = proxy.AddHttpProxy("apiProxy", 8666, weatherapi)
-    .AddLatency("latency",123, 0, 0.8, Direction.Upstream)
-    .AddBandwidthLimit("bandwidth",142, 0.9, Direction.Upstream);
-
 var toxicMsSql = proxy.AddConnectionStringProxy("mssqlProxy", 8668, mssql)
     .AddLatency("latency",150, 0, 0.95, Direction.Downstream)
     .AddBandwidthLimit("bandwidth",102, 0.85, Direction.Downstream);
 
-var toxicPgSql = proxy.AddConnectionStringProxy("pgsqlProxy", 8669, pgsql)
-    .AddLatency("latency", 123, 0, 0.75, Direction.Upstream);
-
-var toxicWeatherApi2 = proxy.AddHttpProxy("otherProxy", 8667, weatherapi);
-
 builder.AddProject<Projects.DemoApi>("demoapi")
-    .WithReference(toxicWeatherApi)
+    .WithReference(weatherapi)
     .WithReference(toxicMsSql)
-    .WithReference(toxicPgSql)
-    .WaitFor(toxicWeatherApi)
+    .WithReference(pgsql)
+    .WaitFor(weatherapi)
     .WithUrlForEndpoint("http", ep => new() { Url = $"/forecast", DisplayText = "Forecast" });
     
 builder.Build().Run();

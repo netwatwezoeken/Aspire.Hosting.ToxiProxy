@@ -5,14 +5,19 @@ namespace Aspire.Hosting.ToxiProxy;
 public class ToxicConnectionStringResource
     : ToxicEndpointResource, IResourceWithConnectionString
 {
-    public ToxicConnectionStringResource(string name, ToxiProxyResource parent, int port, IResourceBuilder<IResourceWithConnectionString> targetResource) : base(name)
+    public ToxicConnectionStringResource(string name, ToxiProxyResource parent, int port, IResourceBuilder<IResourceWithConnectionString> targetResource) :
+        this(name, port, targetResource)
     {
         Parent = parent ?? throw new ArgumentNullException(nameof(parent));
+    }
+
+    public ToxicConnectionStringResource(string name, int port, IResourceBuilder<IResourceWithConnectionString> targetResource) : base(name)
+    {
         Port = port;
         ProxiedService = targetResource.Resource.Name;
         TargetResource = targetResource;
     }
-
+    
     public IResourceBuilder<IResourceWithConnectionString> TargetResource { get ; set ; }
 
     public string ProxiedService { get ; set ; }

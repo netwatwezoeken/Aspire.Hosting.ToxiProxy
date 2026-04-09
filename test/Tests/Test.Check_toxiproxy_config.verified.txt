@@ -53,12 +53,6 @@
       }
     ]
   },
-  otherProxy: {
-    name: otherProxy,
-    listen: [::]:8667,
-    upstream: host.docker.internal:5103,
-    enabled: true
-  },
   pgsqlProxy: {
     name: pgsqlProxy,
     listen: [::]:8669,

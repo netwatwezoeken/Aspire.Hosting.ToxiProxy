@@ -5,7 +5,7 @@ namespace Aspire.Hosting.ToxiProxy;
 public abstract class ToxicEndpointResource(string name) : 
     Resource(name), IResourceWithParent<ToxiProxyResource>
 {
-    public ToxiProxyResource Parent { get; protected set; }
+    public ToxiProxyResource Parent { get; set; }
     
     public int Port { get ; set ; }
     

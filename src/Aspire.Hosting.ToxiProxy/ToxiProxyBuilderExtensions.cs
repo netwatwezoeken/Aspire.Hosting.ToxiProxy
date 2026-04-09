@@ -118,6 +118,84 @@ public static class ToxiProxyBuilderExtensions
             .WithEndpoint(targetPort: port, name: ExternalHttpEndpointResource.PrimaryEndpointName, scheme: "http", isExternal: true, isProxied:false)
             .WithIconName("ArrowCircleDown");
     }
+    
+    /// <summary>
+    /// Add Toxicity to a ConnectionString Resource
+    /// </summary>
+    /// <param name="proxiedResourceBuilder">The <see cref="IResourceBuilder{IResourceWithConnectionString}"/>.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="port">New port for the proxy to listen on.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{ToxicConnectionStringResource}"/>.</returns>
+    public static IResourceBuilder<ToxicConnectionStringResource> WithToxicity(this IResourceBuilder<IResourceWithConnectionString> proxiedResourceBuilder, [ResourceName] string name, int port)
+    {
+        ArgumentNullException.ThrowIfNull(proxiedResourceBuilder);
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        
+        var connectionStringResource = new ToxicConnectionStringResource(name, port, proxiedResourceBuilder);
+
+        proxiedResourceBuilder.OnConnectionStringAvailable(
+            BuildConnectionString(name, port, proxiedResourceBuilder, connectionStringResource));
+        
+        return proxiedResourceBuilder.ApplicationBuilder
+            .AddResource(connectionStringResource);
+    }
+    /// <summary>
+    /// Add Toxicity to a Endpoint Resource
+    /// </summary>
+    /// <param name="proxiedResourceBuilder">The <see cref="IResourceBuilder{IResourceWithEndpoints}"/>.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="port">New port for the proxy to listen on.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{ToxicHttpEndpointResource}"/>.</returns>
+    public static IResourceBuilder<ToxicHttpEndpointResource> WithToxicity(this IResourceBuilder<IResourceWithEndpoints> proxiedResourceBuilder, [ResourceName] string name, int port)
+    {
+        ArgumentNullException.ThrowIfNull(proxiedResourceBuilder);
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        
+        var httpEndpoint = new ToxicHttpEndpointResource(name, port, proxiedResourceBuilder);
+        
+        var healthCheckKey = $"{name}_check";
+        proxiedResourceBuilder.ApplicationBuilder.Services.AddHealthChecks()
+            .AddAsyncCheck(healthCheckKey, async () =>
+            {
+                return HealthCheckResult.Healthy();
+            });
+        
+        return proxiedResourceBuilder.ApplicationBuilder
+            .AddResource(httpEndpoint)
+            .WithHealthCheck(healthCheckKey)
+            .WithEndpoint(targetPort: port, name: ExternalHttpEndpointResource.PrimaryEndpointName, scheme: "http", isExternal: true, isProxied:false)
+            .WithIconName("ArrowCircleDown");
+    }
+
+    /// <summary>
+    /// Attach a Toxic resource to the ToxiProxy server. Use this with the "low impact API"
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <param name="connectionStringResource"></param>
+    /// <returns></returns>
+    public static IResourceBuilder<ToxiProxyResource> With(
+        this IResourceBuilder<ToxiProxyResource> builder,
+        IResourceBuilder<ToxicConnectionStringResource> connectionStringResource)
+    {
+        builder.Resource.AddConnectionStringProxy(connectionStringResource.Resource);
+        connectionStringResource.Resource.Parent = builder.Resource;
+        return builder;
+    }
+    
+    /// <summary>
+    /// Attach a Toxic resource to the ToxiProxy server. Use this with the "low impact API"
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <param name="httpEndpointResource"></param>
+    /// <returns></returns>
+    public static IResourceBuilder<ToxiProxyResource> With(
+        this IResourceBuilder<ToxiProxyResource> builder,
+        IResourceBuilder<ToxicHttpEndpointResource> httpEndpointResource)
+    {
+        builder.Resource.AddHttpProxy(httpEndpointResource.Resource);
+        httpEndpointResource.Resource.Parent = builder.Resource;
+        return builder;
+    }
 
     /// <summary>
     /// Adds a http proxy resource for a specific service.
