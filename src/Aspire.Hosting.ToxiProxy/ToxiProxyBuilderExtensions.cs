@@ -33,7 +33,7 @@ public static class ToxiProxyBuilderExtensions
             .WithImageRegistry(ToxyProxyContainerImageTags.Registry)
             .WithIconName("ArrowCircleDownUp")
             .WithHttpHealthCheck("/proxies")
-            .OnResourceReady(async (toxiproxy, evt, cancellationToken) =>
+            .OnResourceReady(async (toxiproxy, _, _) =>
             {
                 foreach (var proxy in toxiproxy.ConnectionStringResources)
                 {
@@ -92,24 +92,23 @@ public static class ToxiProxyBuilderExtensions
     /// <param name="builder">The <see cref="IResourceBuilder{ToxiProxyResource}"/>.</param>
     /// <param name="name">The name of the resource.</param>
     /// <param name="port">New port for the proxy to listen on.</param>
-    /// <param name="targetPort">Port of the proxied service.</param>
     /// <param name="proxiedService">Name of the service that is proxied.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{ToxicHttpEndPointResource}"/>.</returns>
-    public static IResourceBuilder<ToxicHttpEndpointResource> AddHttpProxy(this IResourceBuilder<ToxiProxyResource> builder, [ResourceName] string name, int port, IResourceBuilder<IResourceWithEndpoints> targetResource)
+    public static IResourceBuilder<ToxicHttpEndpointResource> AddHttpProxy(this IResourceBuilder<ToxiProxyResource> builder, [ResourceName] string name, int port, IResourceBuilder<IResourceWithEndpoints> proxiedService)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
 
-        var httpEndpoint = new ToxicHttpEndpointResource(name, builder.Resource, port, targetResource);
+        var httpEndpoint = new ToxicHttpEndpointResource(name, builder.Resource, port, proxiedService);
         builder.Resource.AddHttpProxy(httpEndpoint);
         
         var healthCheckKey = $"{name}_check";
         builder.ApplicationBuilder.Services.AddHealthChecks()
             .AddAsyncCheck(healthCheckKey, async () =>
             {
-                var toxiProxyUrl = builder.Resource.PrimaryEndpoint.Url;
-                var client = RestService.For<IToxiClient>(toxiProxyUrl);
-                var result = await client.GetProxies();
+                // var toxiProxyUrl = builder.Resource.PrimaryEndpoint.Url;
+                // var client = RestService.For<IToxiClient>(toxiProxyUrl);
+                // var result = await client.GetProxies();
                 return HealthCheckResult.Healthy();
             });
         
@@ -119,48 +118,26 @@ public static class ToxiProxyBuilderExtensions
             .WithEndpoint(targetPort: port, name: ExternalHttpEndpointResource.PrimaryEndpointName, scheme: "http", isExternal: true, isProxied:false)
             .WithIconName("ArrowCircleDown");
     }
-    
+
     /// <summary>
     /// Adds a http proxy resource for a specific service.
     /// </summary>
     /// <param name="builder">The <see cref="IResourceBuilder{ToxiProxyResource}"/>.</param>
     /// <param name="name">The name of the resource.</param>
     /// <param name="port">New port for the proxy to listen on.</param>
-    /// <param name="targetResourceBuilder">Name of the service that is proxied.</param>
+    /// <param name="proxiedResourceBuilder">Name of the service that is proxied.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{ToxicConnectionStringResource}"/>.</returns>
-    public static IResourceBuilder<ToxicConnectionStringResource> AddConnectionStringProxy(this IResourceBuilder<ToxiProxyResource> builder, [ResourceName] string name, int port, IResourceBuilder<IResourceWithConnectionString> targetResourceBuilder)
+    public static IResourceBuilder<ToxicConnectionStringResource> AddConnectionStringProxy(this IResourceBuilder<ToxiProxyResource> builder, [ResourceName] string name, int port, IResourceBuilder<IResourceWithConnectionString> proxiedResourceBuilder)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
-        string? connectionString = null;
         
-        var connectionStringResource = new ToxicConnectionStringResource(name, builder.Resource, port, targetResourceBuilder);
+        var connectionStringResource = new ToxicConnectionStringResource(name, builder.Resource, port, proxiedResourceBuilder);
         builder.Resource.AddConnectionStringProxy(connectionStringResource);
-        builder.WaitFor(targetResourceBuilder);
+        builder.WaitFor(proxiedResourceBuilder);
         
-        targetResourceBuilder.OnConnectionStringAvailable(async (targetConnectionString, @event, ct) =>
-        {
-            if (targetResourceBuilder.Resource is IResourceWithParent resource)
-            {
-                if (resource.Parent.TryGetEndpoints(out var endpoints))
-                {
-                    var targetPort = endpoints?.FirstOrDefault()?.AllocatedEndpoint?.Port;
-                    if(targetPort == null)
-                        throw new DistributedApplicationException($"Could not get target port.");
-
-                    connectionStringResource.TargetPort = (int)targetPort;
-                }
-            }
-            
-            connectionString = await targetConnectionString.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false);
-
-            if (connectionString == null)
-            {
-                throw new DistributedApplicationException($"ConnectionStringAvailableEvent was published for the '{name}' resource but the connection string was null.");
-            }
-                
-            connectionStringResource.ConnectionStringExpression = ReferenceExpression.Create($"{connectionString.Replace($"{connectionStringResource.TargetPort};", $"{port};")}");
-        });
+        proxiedResourceBuilder.OnConnectionStringAvailable(
+            BuildConnectionString(name, port, proxiedResourceBuilder, connectionStringResource));
         
         return builder.ApplicationBuilder
             .AddResource(connectionStringResource);
@@ -176,7 +153,14 @@ public static class ToxiProxyBuilderExtensions
     /// <param name="toxicity">probability of the toxic being applied to a link (defaults to 1.0, 100%).</param>
     /// <param name="direction">link direction to affect (defaults to downstream).</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{ToxicHttpEndPointResource}"/>.</returns>
-    public static IResourceBuilder<ToxicEndpointResource> AddGenericLatency(this IResourceBuilder<ToxicEndpointResource> builder, [ResourceName] string name, int latency, int jitter = 0, double toxicity = 1.0, Direction direction = Direction.Downstream)
+    public static IResourceBuilder<TResource> AddLatency<TResource>(
+        this IResourceBuilder<TResource> builder,
+        [ResourceName] string name,
+        int latency,
+        int jitter = 0,
+        double toxicity = 1.0,
+        Direction direction = Direction.Downstream)
+        where TResource : ToxicEndpointResource
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
@@ -188,16 +172,6 @@ public static class ToxiProxyBuilderExtensions
         
         return builder;
     }
-    
-    public static IResourceBuilder<ToxicHttpEndpointResource> AddLatency(this IResourceBuilder<ToxicHttpEndpointResource> builder, [ResourceName] string name, int latency, int jitter = 0, double toxicity = 1.0, Direction direction = Direction.Downstream)
-    {
-        return (IResourceBuilder<ToxicHttpEndpointResource>)builder.AddGenericLatency( name, latency, jitter, toxicity, direction);
-    }
-    
-    public static IResourceBuilder<ToxicConnectionStringResource> AddLatency(this IResourceBuilder<ToxicConnectionStringResource> builder, [ResourceName] string name, int latency, int jitter = 0, double toxicity = 1.0, Direction direction = Direction.Downstream)
-    {
-        return (IResourceBuilder<ToxicConnectionStringResource>)builder.AddGenericLatency( name, latency, jitter, toxicity, direction);
-    }
 
     /// <summary>
     /// Adds a bandwidth toxic to a specific proxy.
@@ -208,7 +182,13 @@ public static class ToxiProxyBuilderExtensions
     /// <param name="toxicity">probability of the toxic being applied to a link (defaults to 1.0, 100%).</param>
     /// <param name="direction">link direction to affect (defaults to downstream)</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{ToxicHttpEndPointResource}"/>.</returns>
-    public static IResourceBuilder<ToxicEndpointResource> AddGenericBandwidthLimit(this IResourceBuilder<ToxicEndpointResource> builder, [ResourceName] string name, int bandwidth, double toxicity = 1.0, Direction direction = Direction.Downstream)
+    public static IResourceBuilder<TResource> AddBandwidthLimit<TResource>(
+        this IResourceBuilder<TResource> builder,
+        [ResourceName] string name,
+        int bandwidth,
+        double toxicity = 1.0,
+        Direction direction = Direction.Downstream)
+        where TResource : ToxicEndpointResource
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
@@ -219,16 +199,6 @@ public static class ToxiProxyBuilderExtensions
         builder.Resource.AddToxic(toxi);
         
         return builder;
-    }
-    
-    public static IResourceBuilder<ToxicHttpEndpointResource> AddBandwidthLimit(this IResourceBuilder<ToxicHttpEndpointResource> builder, [ResourceName] string name, int bandwidth, double toxicity = 1.0, Direction direction = Direction.Downstream)
-    {
-        return (IResourceBuilder<ToxicHttpEndpointResource>)builder.AddGenericBandwidthLimit( name, bandwidth, toxicity, direction);
-    }
-    
-    public static IResourceBuilder<ToxicConnectionStringResource> AddBandwidthLimit(this IResourceBuilder<ToxicConnectionStringResource> builder, [ResourceName] string name, int bandwidth, double toxicity = 1.0, Direction direction = Direction.Downstream)
-    {
-        return (IResourceBuilder<ToxicConnectionStringResource>)builder.AddGenericBandwidthLimit( name, bandwidth, toxicity, direction);
     }
 
     public static IResourceBuilder<T> WithUi<T>(this IResourceBuilder<T> builder)
@@ -282,5 +252,32 @@ public static class ToxiProxyBuilderExtensions
             source, 
             connectionName ?? source.Resource.TargetResource.Resource.Name,
             optional);
+    }
+    
+    private static Func<IResourceWithConnectionString, ConnectionStringAvailableEvent, CancellationToken, Task> BuildConnectionString(string name, int port, IResourceBuilder<IResourceWithConnectionString> targetResourceBuilder, ToxicConnectionStringResource connectionStringResource)
+    {
+        return async (targetConnectionString, _, ct) =>
+        {
+            if (targetResourceBuilder.Resource is IResourceWithParent resource)
+            {
+                if (resource.Parent.TryGetEndpoints(out var endpoints))
+                {
+                    var targetPort = endpoints.FirstOrDefault()?.AllocatedEndpoint?.Port;
+                    if(targetPort == null)
+                        throw new DistributedApplicationException($"Could not get target port.");
+
+                    connectionStringResource.TargetPort = (int)targetPort;
+                }
+            }
+            
+            var connectionString = await targetConnectionString.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false);
+
+            if (connectionString == null)
+            {
+                throw new DistributedApplicationException($"ConnectionStringAvailableEvent was published for the '{name}' resource but the connection string was null.");
+            }
+                
+            connectionStringResource.ConnectionStringExpression = ReferenceExpression.Create($"{connectionString.Replace($"{connectionStringResource.TargetPort};", $"{port};")}");
+        };
     }
 }
