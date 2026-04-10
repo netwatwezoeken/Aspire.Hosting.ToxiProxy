@@ -5,12 +5,15 @@ Aspire.Hosting.ToxiProxy is a .NET Aspire component that integrates [ToxiProxy](
 🚨Request for feedback! 🚨
 Before I spend time on further completing the functionality I prefer some feedback. Just submit an issue, reach out on the socials, send a pigeon, whatever. And before you do, please read this document to the end?
 
-### Nuget: [Nwwz.Aspire.Hosting.ToxiProxy](https://www.nuget.org/packages/Nwwz.Aspire.Hosting.ToxiProxy/)
+### Nuget
+`dotnet add package Nwwz.Aspire.Hosting.ToxiProxy --version 0.0.1-alpha002`
+
+[Nwwz.Aspire.Hosting.ToxiProxy](https://www.nuget.org/packages/Nwwz.Aspire.Hosting.ToxiProxy/)
 
 ## Usage Example
 
-There are two ways to add toxi proxy to your AppHost.
-One is the low impact api, and a straight forward version that actually represents the technology a bit better.
+There are two ways to add ToxiProxy to your AppHost.
+One is the low impact API, and a straightforward version that actually represents the technology a bit better.
 At the time of writing I have not yet decided to keep them both or which one to keep. Any thoughts or feedback is welcome!
 
 You might already have `AppHost`:
@@ -62,7 +65,7 @@ var pgsql = builder.AddPostgres("postgres")
 // Add the ToxiProxy server
 var proxy = builder.AddToxiProxyServer("toxiproxy");
 
-// Add a toxic connection string based that links to the cerated database
+// Add a toxic connection string based that links to the created database
 var toxicPgSql = proxy.AddConnectionStringProxy("pgsqlProxy", 8669, pgsql)
     .AddLatency("latency", 123, 0, 0.75, Direction.Upstream);
 
@@ -91,24 +94,24 @@ Builds a `ToxicConnectionStringResource` or `ToxicEndpointResource`. Use this wi
   ```
 
 ### `AddHttpProxy`
-Builds a `ToxicEndpointResource`. Use this with the "straight forward API"
+Builds a `ToxicEndpointResource`. Use this with the "straightforward API"
 
 - **Parameters**:
   - `name`: The name of the toxic.
   - `port`: Port to be used by the new Endpoint.
-  - `proxiedService`: Any resource builder that builds a endpoint resource..
+  - `proxiedService`: Any resource builder that builds an endpoint resource.
 - **Example**:
   ```csharp
   var toxicApi = proxy.AddHttpProxy("apiProxy", 8666, weatherapi)
   ```
 
 ### `AddConnectionStringProxy`
-Builds a `ToxicConnectionStringResource`. Use this with the "straight forward API"
+Builds a `ToxicConnectionStringResource`. Use this with the "straightforward API"
 
 - **Parameters**:
   - `name`: The name of the toxic.
   - `port`: Port to be used by the new Connection String.
-  - `proxiedService`: Any resource builder that builds a endpoint resource..
+  - `proxiedService`: Any resource builder that builds an endpoint resource.
 - **Example**:
   ```csharp
   var toxicPgsql = proxy.AddConnectionStringProxy("apiProxy", 8666, pgsql)
@@ -133,7 +136,7 @@ Adds a "bandwidth toxic" to a `ToxicConnectionStringResource` or `ToxicEndpointR
 
 - **Parameters**:
   - `name`: The name of the toxic.
-  - `lbandwidth`: Bandwidth limit in in KB/s.
+  - `bandwidth`: Bandwidth limit in KB/s.
   - `toxicity`: probability of the toxic being applied to a link (defaults to 1.0, 100%).
   - `direction`: link direction to affect (defaults to downstream).
 - **Example**:
@@ -183,7 +186,7 @@ Attach a `ToxicConnectionStringResource` or `ToxicEndpointResource` to the `Toxi
     - ❓ MySql
     - ❓ MariaDB
 - [ ] Get rid of the need to specify a port. `proxy.AddHttpProxy("apiProxy", weatherapi)` should be sufficient instead of `proxy.AddHttpProxy("apiProxy", 8666, weatherapi)`
-- [ ] Support to create a Toxic for an arbitrary service.
+- [ ] Support to create a toxic for an arbitrary service.
 - [ ] Supported toxic types
   - [x] latency
   - [x] bandwidth
@@ -192,19 +195,19 @@ Attach a `ToxicConnectionStringResource` or `ToxicEndpointResource` to the `Toxi
   - [ ] reset_peer
   - [ ] slicer
   - [ ] limit_data
-- [ ] Resource Health checks
-- [ ] Resource WaitFor()
+- [ ] HealthChecks
+- [ ] WaitFor()
 
 ## Ideas
 - Basic control (like pausing) over the Toxies and Proxies via Aspire UI
 - More advanced control via a dedicated UI
 - ....
 - ....
-- You feedback here!
+- Your feedback here!
 
 ## Testing
 
-The `test` folder of this repository contains a Aspire AppHost project with a WeatherApi, 2 databases, a DemoApi and the ToxiProxy in between them:
+The `test` folder of this repository contains an Aspire AppHost project with a WeatherApi, 2 databases, a DemoApi and ToxiProxy in between them:
 ```mermaid
 flowchart TD
   D[DemoApi] --HTTP--> T[ToxiProxy]
