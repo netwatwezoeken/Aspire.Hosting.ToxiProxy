@@ -104,13 +104,8 @@ public static class ToxiProxyBuilderExtensions
         
         var healthCheckKey = $"{name}_check";
         builder.ApplicationBuilder.Services.AddHealthChecks()
-            .AddAsyncCheck(healthCheckKey, async () =>
-            {
-                // var toxiProxyUrl = builder.Resource.PrimaryEndpoint.Url;
-                // var client = RestService.For<IToxiClient>(toxiProxyUrl);
-                // var result = await client.GetProxies();
-                return HealthCheckResult.Healthy();
-            });
+            .AddAsyncCheck(healthCheckKey, async () => 
+                await CheckProxyHealth(builder, name));
         
         return builder.ApplicationBuilder
             .AddResource(httpEndpoint)
@@ -118,7 +113,17 @@ public static class ToxiProxyBuilderExtensions
             .WithEndpoint(targetPort: port, name: ExternalHttpEndpointResource.PrimaryEndpointName, scheme: "http", isExternal: true, isProxied:false)
             .WithIconName("ArrowCircleDown");
     }
-    
+
+    private static async Task<HealthCheckResult> CheckProxyHealth(IResourceBuilder<ToxiProxyResource> builder, string name)
+    {
+        var toxiProxyUrl = builder.Resource.PrimaryEndpoint.Url;
+        var client = RestService.For<IToxiClient>(toxiProxyUrl);
+        var result = await client.GetProxies();
+        return result.ToProxies().Any(p => p.Key == name) ?
+            HealthCheckResult.Healthy() :
+            HealthCheckResult.Unhealthy("Proxy not (yet) known in ToxiProxy");
+    }
+
     /// <summary>
     /// Add Toxicity to a ConnectionString Resource
     /// </summary>
@@ -157,7 +162,12 @@ public static class ToxiProxyBuilderExtensions
         proxiedResourceBuilder.ApplicationBuilder.Services.AddHealthChecks()
             .AddAsyncCheck(healthCheckKey, async () =>
             {
-                return HealthCheckResult.Healthy();
+                var toxiProxyUrl = httpEndpoint.Parent.PrimaryEndpoint.Url;
+                var client = RestService.For<IToxiClient>(toxiProxyUrl);
+                var result = await client.GetProxies();
+                return result.ToProxies().Any(p => p.Key == name) ?
+                    HealthCheckResult.Healthy() :
+                    HealthCheckResult.Unhealthy("Proxy not (yet) known in ToxiProxy");
             });
         
         return proxiedResourceBuilder.ApplicationBuilder
@@ -217,8 +227,14 @@ public static class ToxiProxyBuilderExtensions
         proxiedResourceBuilder.OnConnectionStringAvailable(
             BuildConnectionString(name, port, proxiedResourceBuilder, connectionStringResource));
         
+        var healthCheckKey = $"{name}_check";
+        builder.ApplicationBuilder.Services.AddHealthChecks()
+            .AddAsyncCheck(healthCheckKey, async () => 
+                await CheckProxyHealth(builder, name));
+        
         return builder.ApplicationBuilder
-            .AddResource(connectionStringResource);
+            .AddResource(connectionStringResource)
+            .WithHealthCheck(healthCheckKey);
     }
     
     /// <summary>

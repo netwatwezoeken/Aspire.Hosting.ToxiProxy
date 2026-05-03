@@ -186,15 +186,15 @@ Attach a `ToxicConnectionStringResource` or `ToxicEndpointResource` to the `Toxi
     - ❓ MySql
     - ❓ MariaDB
 - [ ] Get rid of the need to specify a port. `proxy.AddHttpProxy("apiProxy", weatherapi)` should be sufficient instead of `proxy.AddHttpProxy("apiProxy", 8666, weatherapi)`
-- [ ] Support to create a toxic for an arbitrary service.
+- [ ] Support to create a toxic for an arbitrary (external) tcp based service.
 - [ ] Supported toxic types
-  - [x] latency
-  - [x] bandwidth
-  - [ ] slow_close
-  - [ ] timeout
-  - [ ] reset_peer
-  - [ ] slicer
-  - [ ] limit_data
+  - ✅ latency
+  - ✅ bandwidth
+  - ❌ slow_close
+  - ❌ timeout
+  - ❌ reset_peer
+  - ❌ slicer
+  - ❌ limit_data
 - [ ] HealthChecks
 - [ ] WaitFor()
 
