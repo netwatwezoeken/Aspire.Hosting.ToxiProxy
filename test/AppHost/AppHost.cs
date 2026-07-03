@@ -1,3 +1,4 @@
+using System.Reflection;
 using Aspire.Hosting.ToxiProxy;
 
 var builder = DistributedApplication.CreateBuilder(args);
@@ -28,8 +29,15 @@ var toxicMsSql = proxy.AddConnectionStringProxy("mssqlProxy", 8668, mssql)
 
 var toxicWeather = proxy.AddHttpProxy("weatherapiProxy", 8666, weatherapi)
     .WaitFor(weatherapi)
-    .AddLatency("latency",150, 0, 0.95, Direction.Downstream)
-    .AddBandwidthLimit("bandwidth",102, 0.85, Direction.Downstream);
+    .AddLatency("latency",1000, 0, 0.5, Direction.Downstream)
+    .AddBandwidthLimit("bandwidth",12, 0.85, Direction.Downstream);
+
+var assemblyLocation = Assembly.GetExecutingAssembly().Location;
+var locustConfigDirectory = Path.Join(Path.GetDirectoryName(assemblyLocation), "../../../../../test/AppHost/locust");
+var locust = builder.AddContainer("locust", "locustio/locust", "latest")
+    .WithBindMount(locustConfigDirectory, "/mnt/locust")
+    .WithArgs("-f", "/mnt/locust/locustfile.py", "--host", "http://host.docker.internal:5083")
+    .WithEndpoint(8089, 8089, "http", name: "http");
 
 builder.AddProject<Projects.DemoApi>("demoapi")
     .WithReference(toxicWeather)

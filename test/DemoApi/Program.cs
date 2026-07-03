@@ -1,3 +1,4 @@
+using Microsoft.Extensions.ServiceDiscovery.Http;
 using ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,10 +22,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/forecast", async (IHttpClientFactory httpClientFactory, IConfiguration config) =>
+app.MapGet("/forecast", async (IHttpClientFactory httpClientFactory, IConfiguration config, IServiceDiscoveryHttpMessageHandlerFactory serviceDiscoveryHandlerFactory) =>
     {
-        var http = httpClientFactory.CreateClient();
+        using var innerHandler = new SocketsHttpHandler();
+        using var serviceDiscoveryHandler = serviceDiscoveryHandlerFactory.CreateHandler(innerHandler);
+        using var http = new HttpClient(serviceDiscoveryHandler);
         var url = $"http://weatherapi/weatherforecast";
+        http.DefaultRequestHeaders.ConnectionClose = true;
 
         var data = await http.GetFromJsonAsync<object>(url);
         return Results.Json(data);

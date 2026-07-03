@@ -57,6 +57,7 @@ public enum ToxicType
 public record Attributes(
     int? Latency = null,
     int? Jitter = null,
+    int? Timeout = null,
     int? Rate = null
 );
 
