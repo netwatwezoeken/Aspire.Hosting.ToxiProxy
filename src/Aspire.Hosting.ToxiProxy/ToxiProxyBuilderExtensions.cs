@@ -331,6 +331,36 @@ public static class ToxiProxyBuilderExtensions
         return builder;
     }
 
+    /// <summary>
+    /// Adds a reset peer toxic to a specific proxy. Simulates a TCP RST ("connection reset by peer")
+    /// by closing the connection immediately, or after <paramref name="timeout"/> milliseconds have
+    /// elapsed. A <paramref name="timeout"/> of <c>0</c> (the default) resets the connection immediately.
+    /// </summary>
+    /// <param name="builder">The <see cref="ToxicHttpEndpointResource"/>.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="timeout">time in milliseconds before the connection is reset (0 resets immediately).</param>
+    /// <param name="toxicity">probability of the toxic being applied to a link (defaults to 1.0, 100%).</param>
+    /// <param name="direction">link direction to affect (defaults to downstream).</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
+    public static IResourceBuilder<TResource> AddResetPeer<TResource>(
+        this IResourceBuilder<TResource> builder,
+        [ResourceName] string name,
+        int timeout = 0,
+        double toxicity = 1.0,
+        Direction direction = Direction.Downstream)
+        where TResource : ToxicEndpointResource
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        
+        var toxic = new Toxic(ToxicType.ResetPeer, new Parameters(Timeout: timeout), direction, toxicity);
+
+        var toxi = new ToxicResource(name, toxic, builder.Resource);
+        builder.Resource.AddToxic(toxi);
+        
+        return builder;
+    }
+
     public static IResourceBuilder<T> WithUi<T>(this IResourceBuilder<T> builder)
         where T : ToxiProxyResource
     {

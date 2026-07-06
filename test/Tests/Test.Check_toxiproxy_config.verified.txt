@@ -59,6 +59,15 @@
         type: slow_close,
         stream: upstream,
         toxicity: 0.75
+      },
+      {
+        attributes: {
+          timeout: 250
+        },
+        name: resetpeer,
+        type: reset_peer,
+        stream: upstream,
+        toxicity: 0.6
       }
     ]
   },

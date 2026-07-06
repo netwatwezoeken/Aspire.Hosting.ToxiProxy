@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Aspire.Hosting.ToxiProxy.Client;
 
 namespace Aspire.Hosting.ToxiProxy.UnitTests;
@@ -71,6 +70,16 @@ public class ToxicMapperTests
         var json = MapAndSerialize(
             "timeout",
             new Toxic(ToxicType.Timeout, new Parameters(Timeout: 2500), Direction.Downstream, 0.9));
+
+        return VerifyJson(json);
+    }
+
+    [Fact]
+    public Task MapToxic_ResetPeer()
+    {
+        var json = MapAndSerialize(
+            "resetPeer",
+            new Toxic(ToxicType.ResetPeer, new Parameters(Timeout: 1500), Direction.Upstream, 0.9));
 
         return VerifyJson(json);
     }

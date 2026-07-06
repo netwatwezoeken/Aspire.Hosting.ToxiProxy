@@ -12,7 +12,8 @@ var mssql = BuildMsSql(builder, "SqlDatabase");
 var pgsql = BuildPgSql(builder, "postgresdb")
     .WithToxicity("pgsqlProxy", 8669)
     .AddLatency("latency", 123, 0, 0.75, Direction.Upstream)
-    .AddSlowClose("slowclose", 150, 0.75, Direction.Upstream);
+    .AddSlowClose("slowclose", 150, 0.75, Direction.Upstream)
+    .AddResetPeer("resetpeer", 250, 0.6, Direction.Upstream);
 
 var proxy = builder.AddToxiProxyServer("toxiproxy", 8474)
     .With(pgsql);

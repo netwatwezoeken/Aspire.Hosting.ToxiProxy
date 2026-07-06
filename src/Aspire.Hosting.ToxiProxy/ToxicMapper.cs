@@ -55,6 +55,8 @@ internal static class ToxicMapper
                 Delay: toxic.Parameters.Delay),
             ToxicType.Timeout => new Attributes(
                 Timeout: toxic.Parameters.Timeout),
+            ToxicType.ResetPeer => new Attributes(
+                Timeout: toxic.Parameters.Timeout),
             _ => throw new DistributedApplicationException(
                 $"Unsupported toxic type '{toxic.Type}' for toxic '{toxicResource.Name}'.")
         };

@@ -1,0 +1,9 @@
+﻿{
+  attributes: {
+    timeout: 1500
+  },
+  name: resetPeer,
+  type: reset_peer,
+  stream: upstream,
+  toxicity: 0.9
+}
