@@ -3,7 +3,6 @@ using Aspire.Hosting.ToxiProxy.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Refit;
-using Stream = Aspire.Hosting.ToxiProxy.Client.Stream;
 
 namespace Aspire.Hosting.ToxiProxy;
 
@@ -52,37 +51,12 @@ public static class ToxiProxyBuilderExtensions
         var toxiProxyUrl = proxy.Parent.PrimaryEndpoint.Url;
         var client = RestService.For<IToxiClient>(toxiProxyUrl);
 
-        await client.CreateProxy(new Proxy(
-            proxy.Name,
-            true,
-            $"0.0.0.0:{proxy.Port}",
-            $"host.docker.internal:{targetPort}"
-        ));
-        foreach (var toxicResource in proxy.ToxiResources)
+        var upstream = $"host.docker.internal:{targetPort}";
+        await client.CreateProxy(ToxicMapper.BuildProxy(proxy.Name, proxy.Port, upstream));
+
+        foreach (var toxic in ToxicMapper.MapToxics(proxy.ToxiResources))
         {
-            var toxic = toxicResource.Toxic;
-            if (toxic.Type == ToxicType.Latency)
-            {
-                await client.AddToxic(new Client.Toxic(
-                    new Attributes(
-                        Latency: toxic.Parameters.Latency, 
-                        Jitter: toxic.Parameters.Jitter),
-                    toxicResource.Name,
-                    ToxicType.Latency,
-                    toxic.Direction == Direction.Downstream ? Stream.Downstream : Stream.Upstream,
-                    toxic.Toxicity
-                ), proxy.Name);
-            } else if (toxic.Type == ToxicType.Bandwidth)
-            {
-                await client.AddToxic(new Client.Toxic(
-                    new Attributes(
-                        Rate: toxic.Parameters.Bandwidth),
-                    toxicResource.Name,
-                    ToxicType.Bandwidth,
-                    toxic.Direction == Direction.Downstream ? Stream.Downstream : Stream.Upstream,
-                    toxic.Toxicity
-                ), proxy.Name);
-            }
+            await client.AddToxic(toxic, proxy.Name);
         }
     }
 
@@ -371,7 +345,7 @@ public static class ToxiProxyBuilderExtensions
                 throw new DistributedApplicationException($"ConnectionStringAvailableEvent was published for the '{name}' resource but the connection string was null.");
             }
                 
-            connectionStringResource.ConnectionStringExpression = ReferenceExpression.Create($"{connectionString.Replace($"{connectionStringResource.TargetPort};", $"{port};")}");
+            connectionStringResource.ConnectionStringExpression = ReferenceExpression.Create($"{ConnectionStringRewriter.Rewrite(connectionString, connectionStringResource.TargetPort, port)}");
         };
     }
 }
