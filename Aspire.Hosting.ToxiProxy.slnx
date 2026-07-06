@@ -11,6 +11,7 @@
     <Project Path="test/DemoApi/DemoApi.csproj" />
     <Project Path="test/ServiceDefaults/ServiceDefaults.csproj" />
     <Project Path="test/Tests/Tests.csproj" />
+    <Project Path="test/UnitTests/UnitTests.csproj" />
     <Project Path="test\WeatherApi\WeatherApi.csproj" />
   </Folder>
 </Solution>

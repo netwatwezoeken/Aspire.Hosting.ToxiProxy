@@ -1,0 +1,12 @@
+﻿{
+  attributes: {
+    Latency: null,
+    Jitter: null,
+    Timeout: null,
+    Rate: 142
+  },
+  name: bandwidth,
+  type: 1,
+  stream: 0,
+  toxicity: 0.9
+}

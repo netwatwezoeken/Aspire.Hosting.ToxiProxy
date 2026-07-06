@@ -1,0 +1,12 @@
+﻿{
+  attributes: {
+    Latency: null,
+    Jitter: 7,
+    Timeout: null,
+    Rate: null
+  },
+  name: latency,
+  type: 0,
+  stream: 1,
+  toxicity: 0.8
+}
