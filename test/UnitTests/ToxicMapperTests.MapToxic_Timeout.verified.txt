@@ -1,0 +1,9 @@
+{
+  attributes: {
+    timeout: 2500
+  },
+  name: timeout,
+  type: timeout,
+  stream: downstream,
+  toxicity: 0.9
+}

@@ -4,5 +4,6 @@ public record Parameters(
     int? Latency = null,
     int? Jitter = null,
     int? Bandwidth = null,
-    int? Delay = null
+    int? Delay = null,
+    int? Timeout = null
 );

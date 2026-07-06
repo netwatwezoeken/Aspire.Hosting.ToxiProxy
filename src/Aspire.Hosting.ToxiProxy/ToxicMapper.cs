@@ -53,6 +53,8 @@ internal static class ToxicMapper
                 Rate: toxic.Parameters.Bandwidth),
             ToxicType.SlowClose => new Attributes(
                 Delay: toxic.Parameters.Delay),
+            ToxicType.Timeout => new Attributes(
+                Timeout: toxic.Parameters.Timeout),
             _ => throw new DistributedApplicationException(
                 $"Unsupported toxic type '{toxic.Type}' for toxic '{toxicResource.Name}'.")
         };

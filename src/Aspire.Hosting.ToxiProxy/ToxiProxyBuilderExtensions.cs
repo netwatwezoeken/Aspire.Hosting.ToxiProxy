@@ -300,6 +300,37 @@ public static class ToxiProxyBuilderExtensions
         return builder;
     }
 
+    /// <summary>
+    /// Adds a timeout toxic to a specific proxy. Data is stopped in the given direction, and
+    /// after <paramref name="timeout"/> the connection is closed. A <paramref name="timeout"/> of
+    /// <c>0</c> means the connection is held open (data is dropped) until the client or upstream
+    /// closes it.
+    /// </summary>
+    /// <param name="builder">The <see cref="ToxicHttpEndpointResource"/>.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="timeout">time in milliseconds to wait before the connection is closed (0 keeps it open indefinitely).</param>
+    /// <param name="toxicity">probability of the toxic being applied to a link (defaults to 1.0, 100%).</param>
+    /// <param name="direction">link direction to affect (defaults to downstream).</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
+    public static IResourceBuilder<TResource> AddTimeout<TResource>(
+        this IResourceBuilder<TResource> builder,
+        [ResourceName] string name,
+        int timeout,
+        double toxicity = 1.0,
+        Direction direction = Direction.Downstream)
+        where TResource : ToxicEndpointResource
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        
+        var toxic = new Toxic(ToxicType.Timeout, new Parameters(Timeout: timeout), direction, toxicity);
+
+        var toxi = new ToxicResource(name, toxic, builder.Resource);
+        builder.Resource.AddToxic(toxi);
+        
+        return builder;
+    }
+
     public static IResourceBuilder<T> WithUi<T>(this IResourceBuilder<T> builder)
         where T : ToxiProxyResource
     {

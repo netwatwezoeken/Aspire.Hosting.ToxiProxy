@@ -64,4 +64,14 @@ public class ToxicMapperTests
 
         return VerifyJson(json);
     }
+
+    [Fact]
+    public Task MapToxic_Timeout()
+    {
+        var json = MapAndSerialize(
+            "timeout",
+            new Toxic(ToxicType.Timeout, new Parameters(Timeout: 2500), Direction.Downstream, 0.9));
+
+        return VerifyJson(json);
+    }
 }
