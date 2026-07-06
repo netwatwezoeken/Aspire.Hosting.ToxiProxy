@@ -2,6 +2,8 @@
   <Folder Name="/Solution Items/">
     <File Path=".github\workflows\pipeline.yml" />
     <File Path="README.md" />
+    <File Path="Roadmap.md" />
+    <File Path="Testing-Plan.md" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Aspire.Hosting.ToxiProxy/Aspire.Hosting.ToxiProxy.csproj" />
