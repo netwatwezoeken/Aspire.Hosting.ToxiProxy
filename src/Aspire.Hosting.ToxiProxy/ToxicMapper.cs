@@ -51,6 +51,8 @@ internal static class ToxicMapper
                 Jitter: toxic.Parameters.Jitter),
             ToxicType.Bandwidth => new Attributes(
                 Rate: toxic.Parameters.Bandwidth),
+            ToxicType.SlowClose => new Attributes(
+                Delay: toxic.Parameters.Delay),
             _ => throw new DistributedApplicationException(
                 $"Unsupported toxic type '{toxic.Type}' for toxic '{toxicResource.Name}'.")
         };

@@ -55,10 +55,16 @@ public enum ToxicType
 }
 
 public record Attributes(
+    [property: JsonPropertyName("latency")]
     int? Latency = null,
+    [property: JsonPropertyName("jitter")]
     int? Jitter = null,
+    [property: JsonPropertyName("timeout")]
     int? Timeout = null,
-    int? Rate = null
+    [property: JsonPropertyName("rate")]
+    int? Rate = null,
+    [property: JsonPropertyName("delay")]
+    int? Delay = null
 );
 
 public enum Stream

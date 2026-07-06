@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Aspire.Hosting.ToxiProxy.Client;
 
 namespace Aspire.Hosting.ToxiProxy.UnitTests;
@@ -11,7 +12,7 @@ public class ToxicMapperTests
     private static string MapAndSerialize(string name, Toxic toxic)
     {
         var mapped = ToxicMapper.MapToxic(CreateToxic(name, toxic));
-        return JsonSerializer.Serialize(mapped);
+        return JsonSerializer.Serialize(mapped, ToxiClientSettings.JsonSerializerOptions);
     }
 
     [Fact]
@@ -50,6 +51,16 @@ public class ToxicMapperTests
         var json = MapAndSerialize(
             "bandwidth",
             new Toxic(ToxicType.Bandwidth, new Parameters(Bandwidth: 142), Direction.Upstream, 0.9));
+
+        return VerifyJson(json);
+    }
+
+    [Fact]
+    public Task MapToxic_SlowClose()
+    {
+        var json = MapAndSerialize(
+            "slowClose",
+            new Toxic(ToxicType.SlowClose, new Parameters(Delay: 500), Direction.Downstream, 1.0));
 
         return VerifyJson(json);
     }

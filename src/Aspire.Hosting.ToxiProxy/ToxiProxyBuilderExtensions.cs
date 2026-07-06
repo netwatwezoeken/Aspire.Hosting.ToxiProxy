@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.ToxiProxy.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,7 +51,7 @@ public static class ToxiProxyBuilderExtensions
     private static async Task ConfigureProxy(ToxicEndpointResource proxy, int targetPort)
     {
         var toxiProxyUrl = proxy.Parent.PrimaryEndpoint.Url;
-        var client = RestService.For<IToxiClient>(toxiProxyUrl);
+        var client = RestService.For<IToxiClient>(toxiProxyUrl, ToxiClientSettings.Refit);
 
         var upstream = $"host.docker.internal:{targetPort}";
         await client.CreateProxy(ToxicMapper.BuildProxy(proxy.Name, proxy.Port, upstream));
@@ -91,7 +93,7 @@ public static class ToxiProxyBuilderExtensions
     private static async Task<HealthCheckResult> CheckProxyHealth(IResourceBuilder<ToxiProxyResource> builder, string name)
     {
         var toxiProxyUrl = builder.Resource.PrimaryEndpoint.Url;
-        var client = RestService.For<IToxiClient>(toxiProxyUrl);
+        var client = RestService.For<IToxiClient>(toxiProxyUrl, ToxiClientSettings.Refit);
         var result = await client.GetProxies();
         return result.ToProxies().Any(p => p.Key == name) ?
             HealthCheckResult.Healthy() :
@@ -137,7 +139,7 @@ public static class ToxiProxyBuilderExtensions
             .AddAsyncCheck(healthCheckKey, async () =>
             {
                 var toxiProxyUrl = httpEndpoint.Parent.PrimaryEndpoint.Url;
-                var client = RestService.For<IToxiClient>(toxiProxyUrl);
+                var client = RestService.For<IToxiClient>(toxiProxyUrl, ToxiClientSettings.Refit);
                 var result = await client.GetProxies();
                 return result.ToProxies().Any(p => p.Key == name) ?
                     HealthCheckResult.Healthy() :
@@ -262,6 +264,35 @@ public static class ToxiProxyBuilderExtensions
         ArgumentException.ThrowIfNullOrEmpty(name);
         
         var toxic = new Toxic(ToxicType.Bandwidth, new Parameters(Bandwidth: bandwidth), direction, toxicity);
+
+        var toxi = new ToxicResource(name, toxic, builder.Resource);
+        builder.Resource.AddToxic(toxi);
+        
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds a slow close toxic to a specific proxy. The toxic delays the TCP socket
+    /// from closing until <paramref name="delay"/> has elapsed.
+    /// </summary>
+    /// <param name="builder">The <see cref="ToxicHttpEndpointResource"/>.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="delay">time in milliseconds to delay the socket close by.</param>
+    /// <param name="toxicity">probability of the toxic being applied to a link (defaults to 1.0, 100%).</param>
+    /// <param name="direction">link direction to affect (defaults to downstream).</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
+    public static IResourceBuilder<TResource> AddSlowClose<TResource>(
+        this IResourceBuilder<TResource> builder,
+        [ResourceName] string name,
+        int delay,
+        double toxicity = 1.0,
+        Direction direction = Direction.Downstream)
+        where TResource : ToxicEndpointResource
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        
+        var toxic = new Toxic(ToxicType.SlowClose, new Parameters(Delay: delay), direction, toxicity);
 
         var toxi = new ToxicResource(name, toxic, builder.Resource);
         builder.Resource.AddToxic(toxi);

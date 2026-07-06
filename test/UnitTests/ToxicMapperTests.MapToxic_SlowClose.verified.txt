@@ -1,0 +1,9 @@
+﻿{
+  attributes: {
+    delay: 500
+  },
+  name: slowClose,
+  type: slow_close,
+  stream: downstream,
+  toxicity: 1
+}

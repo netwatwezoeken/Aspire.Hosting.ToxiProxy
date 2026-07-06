@@ -11,7 +11,8 @@ var mssql = BuildMsSql(builder, "SqlDatabase");
 // You can add toxicity to a ConnectionsStringResource
 var pgsql = BuildPgSql(builder, "postgresdb")
     .WithToxicity("pgsqlProxy", 8669)
-    .AddLatency("latency", 123, 0, 0.75, Direction.Upstream);
+    .AddLatency("latency", 123, 0, 0.75, Direction.Upstream)
+    .AddSlowClose("slowclose", 150, 0.75, Direction.Upstream);
 
 var proxy = builder.AddToxiProxyServer("toxiproxy", 8474)
     .With(pgsql);

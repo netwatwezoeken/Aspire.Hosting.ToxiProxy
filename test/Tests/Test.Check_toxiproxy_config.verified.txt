@@ -41,6 +41,15 @@
         type: latency,
         stream: upstream,
         toxicity: 0.75
+      },
+      {
+        attributes: {
+          delay: 150
+        },
+        name: slowclose,
+        type: slow_close,
+        stream: upstream,
+        toxicity: 0.75
       }
     ]
   },
