@@ -1,31 +1,4 @@
 ﻿{
-  apiProxy: {
-    name: apiProxy,
-    listen: [::]:8666,
-    upstream: host.docker.internal:5103,
-    enabled: true,
-    toxics: [
-      {
-        attributes: {
-          latency: 123,
-          jitter: 0
-        },
-        name: latency,
-        type: latency,
-        stream: upstream,
-        toxicity: 0.8
-      },
-      {
-        attributes: {
-          rate: 142
-        },
-        name: bandwidth,
-        type: bandwidth,
-        stream: upstream,
-        toxicity: 0.9
-      }
-    ]
-  },
   mssqlProxy: {
     name: mssqlProxy,
     listen: [::]:8668,
@@ -68,6 +41,33 @@
         type: latency,
         stream: upstream,
         toxicity: 0.75
+      }
+    ]
+  },
+  weatherapiProxy: {
+    name: weatherapiProxy,
+    listen: [::]:8666,
+    upstream: host.docker.internal:5103,
+    enabled: true,
+    toxics: [
+      {
+        attributes: {
+          latency: 1000,
+          jitter: 0
+        },
+        name: latency,
+        type: latency,
+        stream: downstream,
+        toxicity: 0.5
+      },
+      {
+        attributes: {
+          rate: 12
+        },
+        name: bandwidth,
+        type: bandwidth,
+        stream: downstream,
+        toxicity: 0.85
       }
     ]
   }
