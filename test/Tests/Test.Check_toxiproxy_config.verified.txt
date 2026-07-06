@@ -32,6 +32,17 @@
         type: timeout,
         stream: downstream,
         toxicity: 0.9
+      },
+      {
+        attributes: {
+          average_size: 64,
+          size_variation: 32,
+          delay: 10
+        },
+        name: slicer,
+        type: slicer,
+        stream: downstream,
+        toxicity: 0.8
       }
     ]
   },

@@ -1,0 +1,9 @@
+{
+  attributes: {
+    average_size: 64
+  },
+  name: slicer,
+  type: slicer,
+  stream: downstream,
+  toxicity: 1
+}

@@ -5,5 +5,7 @@ public record Parameters(
     int? Jitter = null,
     int? Bandwidth = null,
     int? Delay = null,
-    int? Timeout = null
+    int? Timeout = null,
+    int? AverageSize = null,  // slicer, bytes
+    int? SizeVariation = null // slicer, bytes
 );

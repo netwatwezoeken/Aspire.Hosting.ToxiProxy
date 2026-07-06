@@ -28,7 +28,8 @@ if (!isTestRun)
 var toxicMsSql = proxy.AddConnectionStringProxy("mssqlProxy", 8668, mssql)
     .AddLatency("latency",150, 0, 0.95, Direction.Downstream)
     .AddBandwidthLimit("bandwidth",102, 0.85, Direction.Downstream)
-    .AddTimeout("timeout", 2500, 0.9, Direction.Downstream);
+    .AddTimeout("timeout", 2500, 0.9, Direction.Downstream)
+    .AddSlicer("slicer", 64, 32, 10, 0.8, Direction.Downstream);
 
 var toxicWeather = proxy.AddHttpProxy("weatherapiProxy", 8666, weatherapi)
     .WaitFor(weatherapi)

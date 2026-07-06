@@ -57,6 +57,10 @@ internal static class ToxicMapper
                 Timeout: toxic.Parameters.Timeout),
             ToxicType.ResetPeer => new Attributes(
                 Timeout: toxic.Parameters.Timeout),
+            ToxicType.Slicer => new Attributes(
+                AverageSize: toxic.Parameters.AverageSize,
+                SizeVariation: toxic.Parameters.SizeVariation,
+                Delay: toxic.Parameters.Delay),
             _ => throw new DistributedApplicationException(
                 $"Unsupported toxic type '{toxic.Type}' for toxic '{toxicResource.Name}'.")
         };

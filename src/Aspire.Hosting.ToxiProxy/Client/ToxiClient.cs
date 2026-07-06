@@ -64,7 +64,11 @@ public record Attributes(
     [property: JsonPropertyName("rate")]
     int? Rate = null,
     [property: JsonPropertyName("delay")]
-    int? Delay = null
+    int? Delay = null,
+    [property: JsonPropertyName("average_size")]
+    int? AverageSize = null,
+    [property: JsonPropertyName("size_variation")]
+    int? SizeVariation = null
 );
 
 public enum Stream

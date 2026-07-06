@@ -1,0 +1,11 @@
+{
+  attributes: {
+    delay: 10,
+    average_size: 64,
+    size_variation: 32
+  },
+  name: slicer,
+  type: slicer,
+  stream: downstream,
+  toxicity: 0.9
+}

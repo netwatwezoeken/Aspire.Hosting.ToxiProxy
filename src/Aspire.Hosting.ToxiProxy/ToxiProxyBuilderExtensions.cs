@@ -361,6 +361,40 @@ public static class ToxiProxyBuilderExtensions
         return builder;
     }
 
+    /// <summary>
+    /// Adds a slicer toxic to a specific proxy. Slices TCP data up into small bits, optionally
+    /// adding a <paramref name="delay"/> between each sliced "packet". Packet sizes are
+    /// <paramref name="averageSize"/> +/- <paramref name="sizeVariation"/> bytes.
+    /// </summary>
+    /// <param name="builder">The <see cref="ToxicHttpEndpointResource"/>.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="averageSize">size in bytes of an average packet.</param>
+    /// <param name="sizeVariation">variation in bytes of an average packet (should be smaller than <paramref name="averageSize"/>).</param>
+    /// <param name="delay">time in microseconds to delay each packet by.</param>
+    /// <param name="toxicity">probability of the toxic being applied to a link (defaults to 1.0, 100%).</param>
+    /// <param name="direction">link direction to affect (defaults to downstream).</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
+    public static IResourceBuilder<TResource> AddSlicer<TResource>(
+        this IResourceBuilder<TResource> builder,
+        [ResourceName] string name,
+        int averageSize,
+        int sizeVariation = 0,
+        int delay = 0,
+        double toxicity = 1.0,
+        Direction direction = Direction.Downstream)
+        where TResource : ToxicEndpointResource
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        
+        var toxic = new Toxic(ToxicType.Slicer, new Parameters(Delay: delay, AverageSize: averageSize, SizeVariation: sizeVariation), direction, toxicity);
+
+        var toxi = new ToxicResource(name, toxic, builder.Resource);
+        builder.Resource.AddToxic(toxi);
+        
+        return builder;
+    }
+
     public static IResourceBuilder<T> WithUi<T>(this IResourceBuilder<T> builder)
         where T : ToxiProxyResource
     {

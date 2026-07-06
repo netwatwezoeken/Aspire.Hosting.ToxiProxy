@@ -83,4 +83,24 @@ public class ToxicMapperTests
 
         return VerifyJson(json);
     }
+
+    [Fact]
+    public Task MapToxic_Slicer()
+    {
+        var json = MapAndSerialize(
+            "slicer",
+            new Toxic(ToxicType.Slicer, new Parameters(AverageSize: 64, SizeVariation: 32, Delay: 10), Direction.Downstream, 0.9));
+
+        return VerifyJson(json);
+    }
+
+    [Fact]
+    public Task MapToxic_Slicer_with_only_average_size()
+    {
+        var json = MapAndSerialize(
+            "slicer",
+            new Toxic(ToxicType.Slicer, new Parameters(AverageSize: 64), Direction.Downstream, 1.0));
+
+        return VerifyJson(json);
+    }
 }
