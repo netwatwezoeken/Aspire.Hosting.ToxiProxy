@@ -61,6 +61,8 @@ internal static class ToxicMapper
                 AverageSize: toxic.Parameters.AverageSize,
                 SizeVariation: toxic.Parameters.SizeVariation,
                 Delay: toxic.Parameters.Delay),
+            ToxicType.LimitData => new Attributes(
+                Bytes: toxic.Parameters.Bytes),
             _ => throw new DistributedApplicationException(
                 $"Unsupported toxic type '{toxic.Type}' for toxic '{toxicResource.Name}'.")
         };

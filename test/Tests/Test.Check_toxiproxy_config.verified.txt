@@ -106,6 +106,15 @@
         type: bandwidth,
         stream: downstream,
         toxicity: 0.85
+      },
+      {
+        attributes: {
+          bytes: 1048576
+        },
+        name: limitdata,
+        type: limit_data,
+        stream: downstream,
+        toxicity: 0.7
       }
     ]
   }

@@ -7,5 +7,6 @@ public record Parameters(
     int? Delay = null,
     int? Timeout = null,
     int? AverageSize = null,  // slicer, bytes
-    int? SizeVariation = null // slicer, bytes
+    int? SizeVariation = null, // slicer, bytes
+    long? Bytes = null        // limit_data
 );

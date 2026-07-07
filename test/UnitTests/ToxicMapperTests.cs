@@ -103,4 +103,24 @@ public class ToxicMapperTests
 
         return VerifyJson(json);
     }
+
+    [Fact]
+    public Task MapToxic_LimitData()
+    {
+        var json = MapAndSerialize(
+            "limitData",
+            new Toxic(ToxicType.LimitData, new Parameters(Bytes: 2048), Direction.Downstream, 0.9));
+
+        return VerifyJson(json);
+    }
+
+    [Fact]
+    public Task MapToxic_LimitData_with_large_byte_count()
+    {
+        var json = MapAndSerialize(
+            "limitData",
+            new Toxic(ToxicType.LimitData, new Parameters(Bytes: 5_000_000_000L), Direction.Downstream, 1.0));
+
+        return VerifyJson(json);
+    }
 }

@@ -1,0 +1,9 @@
+{
+  attributes: {
+    bytes: 2048
+  },
+  name: limitData,
+  type: limit_data,
+  stream: downstream,
+  toxicity: 0.9
+}

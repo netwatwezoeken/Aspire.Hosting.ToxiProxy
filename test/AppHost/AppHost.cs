@@ -34,7 +34,8 @@ var toxicMsSql = proxy.AddConnectionStringProxy("mssqlProxy", 8668, mssql)
 var toxicWeather = proxy.AddHttpProxy("weatherapiProxy", 8666, weatherapi)
     .WaitFor(weatherapi)
     .AddLatency("latency",1000, 0, 0.5, Direction.Downstream)
-    .AddBandwidthLimit("bandwidth",12, 0.85, Direction.Downstream);
+    .AddBandwidthLimit("bandwidth",12, 0.85, Direction.Downstream)
+    .AddLimitData("limitdata", 1048576, 0.7, Direction.Downstream);
 
 var assemblyLocation = Assembly.GetExecutingAssembly().Location;
 var locustConfigDirectory = Path.Join(Path.GetDirectoryName(assemblyLocation), "../../../../../test/AppHost/locust");

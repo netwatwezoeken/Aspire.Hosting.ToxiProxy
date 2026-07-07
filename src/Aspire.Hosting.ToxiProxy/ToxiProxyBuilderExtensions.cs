@@ -395,6 +395,35 @@ public static class ToxiProxyBuilderExtensions
         return builder;
     }
 
+    /// <summary>
+    /// Adds a limit data toxic to a specific proxy. Closes the connection once <paramref name="bytes"/>
+    /// bytes have been transmitted through it.
+    /// </summary>
+    /// <param name="builder">The <see cref="ToxicHttpEndpointResource"/>.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="bytes">number of bytes to transmit before the connection is closed.</param>
+    /// <param name="toxicity">probability of the toxic being applied to a link (defaults to 1.0, 100%).</param>
+    /// <param name="direction">link direction to affect (defaults to downstream).</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
+    public static IResourceBuilder<TResource> AddLimitData<TResource>(
+        this IResourceBuilder<TResource> builder,
+        [ResourceName] string name,
+        long bytes,
+        double toxicity = 1.0,
+        Direction direction = Direction.Downstream)
+        where TResource : ToxicEndpointResource
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        
+        var toxic = new Toxic(ToxicType.LimitData, new Parameters(Bytes: bytes), direction, toxicity);
+
+        var toxi = new ToxicResource(name, toxic, builder.Resource);
+        builder.Resource.AddToxic(toxi);
+        
+        return builder;
+    }
+
     public static IResourceBuilder<T> WithUi<T>(this IResourceBuilder<T> builder)
         where T : ToxiProxyResource
     {

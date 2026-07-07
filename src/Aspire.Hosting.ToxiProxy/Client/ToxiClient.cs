@@ -68,7 +68,9 @@ public record Attributes(
     [property: JsonPropertyName("average_size")]
     int? AverageSize = null,
     [property: JsonPropertyName("size_variation")]
-    int? SizeVariation = null
+    int? SizeVariation = null,
+    [property: JsonPropertyName("bytes")]
+    long? Bytes = null
 );
 
 public enum Stream
