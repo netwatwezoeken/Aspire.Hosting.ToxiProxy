@@ -115,6 +115,16 @@
         type: limit_data,
         stream: downstream,
         toxicity: 0.7
+      },
+      {
+        attributes: {
+          loss_rate: 0.2,
+          correlation: 0.1
+        },
+        name: packetloss,
+        type: packet_loss,
+        stream: downstream,
+        toxicity: 0.8
       }
     ]
   }

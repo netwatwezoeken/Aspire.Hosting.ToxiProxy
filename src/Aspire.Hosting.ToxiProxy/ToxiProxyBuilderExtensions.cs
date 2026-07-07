@@ -424,6 +424,37 @@ public static class ToxiProxyBuilderExtensions
         return builder;
     }
 
+    /// <summary>
+    /// Adds a packet loss toxic to a specific proxy. Randomly drops chunks flowing through the proxy,
+    /// simulating flaky Wi-Fi, mobile, or satellite network conditions.
+    /// </summary>
+    /// <param name="builder">The <see cref="ToxicHttpEndpointResource"/>.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="lossRate">probability [0.0-1.0] that a chunk is dropped.</param>
+    /// <param name="correlation">extra drop probability [0.0-1.0] when the previous chunk was dropped, modeling burst loss (defaults to 0.0).</param>
+    /// <param name="toxicity">probability of the toxic being applied to a link (defaults to 1.0, 100%).</param>
+    /// <param name="direction">link direction to affect (defaults to downstream).</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
+    public static IResourceBuilder<TResource> AddPacketLoss<TResource>(
+        this IResourceBuilder<TResource> builder,
+        [ResourceName] string name,
+        double lossRate,
+        double correlation = 0.0,
+        double toxicity = 1.0,
+        Direction direction = Direction.Downstream)
+        where TResource : ToxicEndpointResource
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        
+        var toxic = new Toxic(ToxicType.PacketLoss, new Parameters(LossRate: lossRate, Correlation: correlation), direction, toxicity);
+
+        var toxi = new ToxicResource(name, toxic, builder.Resource);
+        builder.Resource.AddToxic(toxi);
+        
+        return builder;
+    }
+
     public static IResourceBuilder<T> WithUi<T>(this IResourceBuilder<T> builder)
         where T : ToxiProxyResource
     {

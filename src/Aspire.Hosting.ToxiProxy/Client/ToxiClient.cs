@@ -51,7 +51,9 @@ public enum ToxicType
     [JsonStringEnumMemberName("slicer")]
     Slicer,
     [JsonStringEnumMemberName("limit_data")]
-    LimitData
+    LimitData,
+    [JsonStringEnumMemberName("packet_loss")]
+    PacketLoss
 }
 
 public record Attributes(
@@ -70,7 +72,11 @@ public record Attributes(
     [property: JsonPropertyName("size_variation")]
     int? SizeVariation = null,
     [property: JsonPropertyName("bytes")]
-    long? Bytes = null
+    long? Bytes = null,
+    [property: JsonPropertyName("loss_rate")]
+    double? LossRate = null,
+    [property: JsonPropertyName("correlation")]
+    double? Correlation = null
 );
 
 public enum Stream

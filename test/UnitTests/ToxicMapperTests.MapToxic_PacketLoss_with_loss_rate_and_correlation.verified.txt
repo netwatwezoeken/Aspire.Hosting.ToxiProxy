@@ -1,0 +1,10 @@
+{
+  attributes: {
+    loss_rate: 0.3,
+    correlation: 0.25
+  },
+  name: packetLoss,
+  type: packet_loss,
+  stream: downstream,
+  toxicity: 0.9
+}

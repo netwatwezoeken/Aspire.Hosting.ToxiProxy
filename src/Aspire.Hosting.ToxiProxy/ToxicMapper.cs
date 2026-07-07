@@ -63,6 +63,9 @@ internal static class ToxicMapper
                 Delay: toxic.Parameters.Delay),
             ToxicType.LimitData => new Attributes(
                 Bytes: toxic.Parameters.Bytes),
+            ToxicType.PacketLoss => new Attributes(
+                LossRate: toxic.Parameters.LossRate,
+                Correlation: toxic.Parameters.Correlation),
             _ => throw new DistributedApplicationException(
                 $"Unsupported toxic type '{toxic.Type}' for toxic '{toxicResource.Name}'.")
         };

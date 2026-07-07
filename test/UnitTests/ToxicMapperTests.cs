@@ -123,4 +123,24 @@ public class ToxicMapperTests
 
         return VerifyJson(json);
     }
+
+    [Fact]
+    public Task MapToxic_PacketLoss_with_loss_rate_and_correlation()
+    {
+        var json = MapAndSerialize(
+            "packetLoss",
+            new Toxic(ToxicType.PacketLoss, new Parameters(LossRate: 0.3, Correlation: 0.25), Direction.Downstream, 0.9));
+
+        return VerifyJson(json);
+    }
+
+    [Fact]
+    public Task MapToxic_PacketLoss_with_zero_correlation()
+    {
+        var json = MapAndSerialize(
+            "packetLoss",
+            new Toxic(ToxicType.PacketLoss, new Parameters(LossRate: 0.1, Correlation: 0.0), Direction.Downstream, 1.0));
+
+        return VerifyJson(json);
+    }
 }
