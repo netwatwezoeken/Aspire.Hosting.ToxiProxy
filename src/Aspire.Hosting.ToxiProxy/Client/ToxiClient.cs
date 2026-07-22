@@ -8,7 +8,7 @@ public interface IToxiClient
 {
     [Post("/proxies")]
     Task CreateProxy([Body] Proxy proxy);
-    
+
     [Get("/proxies")]
     Task<ProxiesResponse> GetProxies();
 
@@ -80,7 +80,7 @@ public record Attributes(
 );
 
 public enum Stream
-{   
+{
     [JsonStringEnumMemberName("upstream")]
     Upstream,
     [JsonStringEnumMemberName("downstream")]
@@ -104,6 +104,6 @@ public record ProxyResponse(
     string listen,
     string upstream,
     bool enabled
-) : Proxy (name, enabled, listen, upstream);
+) : Proxy(name, enabled, listen, upstream);
 
 

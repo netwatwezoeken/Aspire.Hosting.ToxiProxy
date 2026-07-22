@@ -17,21 +17,21 @@ public class ToxicConnectionStringResource
         ProxiedService = targetResource.Resource.Name;
         TargetResource = targetResource;
     }
-    
-    public IResourceBuilder<IResourceWithConnectionString> TargetResource { get ; set ; }
 
-    public string ProxiedService { get ; set ; }
+    public IResourceBuilder<IResourceWithConnectionString> TargetResource { get; set; }
 
-    public int TargetPort { get ; set ; }
-    
+    public string ProxiedService { get; set; }
+
+    public int TargetPort { get; set; }
+
     private ReferenceExpression? _connectionStringExpression;
-    
+
     public ReferenceExpression ConnectionStringExpression
     {
         get => _connectionStringExpression ?? TargetResource.Resource.ConnectionStringExpression;
         set => _connectionStringExpression = value;
     }
-    
+
     public ValueTask<string?> GetConnectionStringAsync(CancellationToken cancellationToken = default)
     {
         if (_connectionStringExpression != null)

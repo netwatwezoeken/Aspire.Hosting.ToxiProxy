@@ -11,7 +11,7 @@ public class ToxicResource
         Toxic = toxic;
     }
 
-    public Toxic Toxic { get ; set ; }
+    public Toxic Toxic { get; set; }
 
     public ToxicEndpointResource Parent { get; }
 }

@@ -7,7 +7,7 @@ namespace Aspire.Hosting.ToxiProxy;
 public static class ToxiClientSettings
 {
     public static JsonSerializerOptions JsonSerializerOptions { get; } = CreateJsonSerializerOptions();
-    
+
     public static RefitSettings Refit { get; } = new()
     {
         ContentSerializer = new SystemTextJsonContentSerializer(JsonSerializerOptions),

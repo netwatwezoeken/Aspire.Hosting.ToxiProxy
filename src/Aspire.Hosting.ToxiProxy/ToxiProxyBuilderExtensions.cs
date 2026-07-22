@@ -26,7 +26,7 @@ public static class ToxiProxyBuilderExtensions
         ArgumentException.ThrowIfNullOrEmpty(name);
 
         var toxiProxy = new ToxiProxyResource(name);
-        
+
         return builder.AddResource(toxiProxy)
             .WithHttpEndpoint(port, 8474)
             .WithArgs("-host", "0.0.0.0")
@@ -77,16 +77,16 @@ public static class ToxiProxyBuilderExtensions
 
         var httpEndpoint = new ToxicHttpEndpointResource(name, builder.Resource, port, proxiedService);
         builder.Resource.AddHttpProxy(httpEndpoint);
-        
+
         var healthCheckKey = $"{name}_check";
         builder.ApplicationBuilder.Services.AddHealthChecks()
-            .AddAsyncCheck(healthCheckKey, async () => 
+            .AddAsyncCheck(healthCheckKey, async () =>
                 await CheckProxyHealth(builder, name));
-        
+
         return builder.ApplicationBuilder
             .AddResource(httpEndpoint)
             .WithHealthCheck(healthCheckKey)
-            .WithEndpoint(targetPort: port, name: ExternalHttpEndpointResource.PrimaryEndpointName, scheme: "http", isExternal: true, isProxied:false)
+            .WithEndpoint(targetPort: port, name: ExternalHttpEndpointResource.PrimaryEndpointName, scheme: "http", isExternal: true, isProxied: false)
             .WithIconName("ArrowCircleDown");
     }
 
@@ -112,24 +112,24 @@ public static class ToxiProxyBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
-        
+
         var connectionStringResource = new ToxicConnectionStringResource(name, builder.Resource, port, proxiedResourceBuilder);
         builder.Resource.AddConnectionStringProxy(connectionStringResource);
         builder.WaitFor(proxiedResourceBuilder);
-        
+
         proxiedResourceBuilder.OnConnectionStringAvailable(
             BuildConnectionString(name, port, proxiedResourceBuilder, connectionStringResource));
-        
+
         var healthCheckKey = $"{name}_check";
         builder.ApplicationBuilder.Services.AddHealthChecks()
-            .AddAsyncCheck(healthCheckKey, async () => 
+            .AddAsyncCheck(healthCheckKey, async () =>
                 await CheckProxyHealth(builder, name));
-        
+
         return builder.ApplicationBuilder
             .AddResource(connectionStringResource)
             .WithHealthCheck(healthCheckKey);
     }
-    
+
     /// <summary>
     /// Adds a latency toxic to a specific proxy.
     /// </summary>
@@ -151,12 +151,12 @@ public static class ToxiProxyBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
-        
+
         var toxic = new Toxic(ToxicType.Latency, new Parameters(latency, jitter), direction, toxicity);
 
         var toxi = new ToxicResource(name, toxic, builder.Resource);
         builder.Resource.AddToxic(toxi);
-        
+
         return builder;
     }
 
@@ -179,12 +179,12 @@ public static class ToxiProxyBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
-        
+
         var toxic = new Toxic(ToxicType.Bandwidth, new Parameters(Bandwidth: bandwidth), direction, toxicity);
 
         var toxi = new ToxicResource(name, toxic, builder.Resource);
         builder.Resource.AddToxic(toxi);
-        
+
         return builder;
     }
 
@@ -208,12 +208,12 @@ public static class ToxiProxyBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
-        
+
         var toxic = new Toxic(ToxicType.SlowClose, new Parameters(Delay: delay), direction, toxicity);
 
         var toxi = new ToxicResource(name, toxic, builder.Resource);
         builder.Resource.AddToxic(toxi);
-        
+
         return builder;
     }
 
@@ -239,12 +239,12 @@ public static class ToxiProxyBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
-        
+
         var toxic = new Toxic(ToxicType.Timeout, new Parameters(Timeout: timeout), direction, toxicity);
 
         var toxi = new ToxicResource(name, toxic, builder.Resource);
         builder.Resource.AddToxic(toxi);
-        
+
         return builder;
     }
 
@@ -269,12 +269,12 @@ public static class ToxiProxyBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
-        
+
         var toxic = new Toxic(ToxicType.ResetPeer, new Parameters(Timeout: timeout), direction, toxicity);
 
         var toxi = new ToxicResource(name, toxic, builder.Resource);
         builder.Resource.AddToxic(toxi);
-        
+
         return builder;
     }
 
@@ -303,12 +303,12 @@ public static class ToxiProxyBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
-        
+
         var toxic = new Toxic(ToxicType.Slicer, new Parameters(Delay: delay, AverageSize: averageSize, SizeVariation: sizeVariation), direction, toxicity);
 
         var toxi = new ToxicResource(name, toxic, builder.Resource);
         builder.Resource.AddToxic(toxi);
-        
+
         return builder;
     }
 
@@ -332,12 +332,12 @@ public static class ToxiProxyBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
-        
+
         var toxic = new Toxic(ToxicType.LimitData, new Parameters(Bytes: bytes), direction, toxicity);
 
         var toxi = new ToxicResource(name, toxic, builder.Resource);
         builder.Resource.AddToxic(toxi);
-        
+
         return builder;
     }
 
@@ -363,12 +363,12 @@ public static class ToxiProxyBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
-        
+
         var toxic = new Toxic(ToxicType.PacketLoss, new Parameters(LossRate: lossRate, Correlation: correlation), direction, toxicity);
 
         var toxi = new ToxicResource(name, toxic, builder.Resource);
         builder.Resource.AddToxic(toxi);
-        
+
         return builder;
     }
 
@@ -385,7 +385,7 @@ public static class ToxiProxyBuilderExtensions
             .WithHttpHealthCheck("/api/proxies");
         return builder;
     }
-    
+
     public static IResourceBuilder<T> WithNewUi<T>(this IResourceBuilder<T> builder)
         where T : ToxiProxyResource
     {
@@ -399,7 +399,7 @@ public static class ToxiProxyBuilderExtensions
             });
         return builder;
     }
-    
+
     public static IResourceBuilder<TDestination> WithReference<TDestination>(this IResourceBuilder<TDestination> builder, IResourceBuilder<ToxicHttpEndpointResource> endpointReference)
         where TDestination : IResourceWithEnvironment
     {
@@ -414,17 +414,17 @@ public static class ToxiProxyBuilderExtensions
         });
         return builder;
     }
-    
+
     public static IResourceBuilder<TDestination> WithReference<TDestination>(this IResourceBuilder<TDestination> builder, IResourceBuilder<ToxicConnectionStringResource> source, string? connectionName = null, bool optional = false)
         where TDestination : IResourceWithEnvironment
     {
         return ResourceBuilderExtensions.WithReference(
-            builder, 
-            source, 
+            builder,
+            source,
             connectionName ?? source.Resource.TargetResource.Resource.Name,
             optional);
     }
-    
+
     private static Func<IResourceWithConnectionString, ConnectionStringAvailableEvent, CancellationToken, Task> BuildConnectionString(string name, int port, IResourceBuilder<IResourceWithConnectionString> targetResourceBuilder, ToxicConnectionStringResource connectionStringResource)
     {
         return async (targetConnectionString, _, ct) =>
@@ -434,20 +434,20 @@ public static class ToxiProxyBuilderExtensions
                 if (resource.Parent.TryGetEndpoints(out var endpoints))
                 {
                     var targetPort = endpoints.FirstOrDefault()?.AllocatedEndpoint?.Port;
-                    if(targetPort == null)
+                    if (targetPort == null)
                         throw new DistributedApplicationException($"Could not get target port.");
 
                     connectionStringResource.TargetPort = (int)targetPort;
                 }
             }
-            
+
             var connectionString = await targetConnectionString.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false);
 
             if (connectionString == null)
             {
                 throw new DistributedApplicationException($"ConnectionStringAvailableEvent was published for the '{name}' resource but the connection string was null.");
             }
-                
+
             connectionStringResource.ConnectionStringExpression = ReferenceExpression.Create($"{ConnectionStringRewriter.Rewrite(connectionString, connectionStringResource.TargetPort, port)}");
         };
     }

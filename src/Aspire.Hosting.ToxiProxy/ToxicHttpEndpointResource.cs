@@ -6,7 +6,7 @@ public class ToxicHttpEndpointResource
     : ToxicEndpointResource, IResourceWithEndpoints, IResourceWithWaitSupport
 {
     private const string PrimaryEndpointName = "http";
-    
+
     public ToxicHttpEndpointResource(string name, ToxiProxyResource parent, int port, IResourceBuilder<IResourceWithEndpoints> targetResource) :
         this(name, port, targetResource)
     {
@@ -20,9 +20,9 @@ public class ToxicHttpEndpointResource
         TargetResource = targetResource;
     }
 
-    public IResourceBuilder<IResourceWithEndpoints> TargetResource { get ; set ; }
+    public IResourceBuilder<IResourceWithEndpoints> TargetResource { get; set; }
 
-    public string ProxiedService { get ; set ; }
+    public string ProxiedService { get; set; }
 
     public EndpointReference PrimaryEndpoint { get; }
 }
