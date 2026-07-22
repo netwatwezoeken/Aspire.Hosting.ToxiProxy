@@ -38,12 +38,17 @@ public static class ToxiProxyBuilderExtensions
             {
                 foreach (var proxy in toxiproxy.ConnectionStringResources)
                 {
-                    await ConfigureProxy(proxy, proxy.TargetPort);
+                    await ConfigureProxy(proxy, $"host.docker.internal:{proxy.TargetPort}");
                 }
 
                 foreach (var proxy in toxiproxy.HttpEndPointResources)
                 {
-                    await ConfigureProxy(proxy, proxy.TargetResource.Resource.GetEndpoint("http").Port);
+                    await ConfigureProxy(proxy, $"host.docker.internal:{proxy.TargetResource.Resource.GetEndpoint("http").Port}");
+                }
+
+                foreach (var proxy in toxiproxy.ExternalServiceResources)
+                {
+                    await ConfigureProxy(proxy, $"{NormalizeHost(proxy.TargetUri.Host)}:{proxy.TargetUri.Port}");
                 }
             });
     }
@@ -57,12 +62,11 @@ public static class ToxiProxyBuilderExtensions
     internal static string NormalizeHost(string host) =>
         host is "localhost" or "127.0.0.1" ? "host.docker.internal" : host;
 
-    private static async Task ConfigureProxy(ToxicEndpointResource proxy, int targetPort)
+    private static async Task ConfigureProxy(ToxicEndpointResource proxy, string upstream)
     {
         var toxiProxyUrl = proxy.Parent.PrimaryEndpoint.Url;
         var client = RestService.For<IToxiClient>(toxiProxyUrl, ToxiClientSettings.Refit);
 
-        var upstream = $"host.docker.internal:{targetPort}";
         await client.CreateProxy(ToxicMapper.BuildProxy(proxy.Name, proxy.Port, upstream));
 
         foreach (var toxic in ToxicMapper.MapToxics(proxy.ToxiResources))
@@ -420,6 +424,69 @@ public static class ToxiProxyBuilderExtensions
             var proxiedServiceName = endpointReference.Resource.ProxiedService;
             var port = endpointReference.Resource.Port;
             context.EnvironmentVariables[$"services__{proxiedServiceName}__http__0"] = $"http://localhost:{port}";
+        });
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds an external service proxy resource for the given <see cref="ExternalServiceResource"/>.
+    /// ToxiProxy will forward traffic from <paramref name="port"/> to the external service's URI,
+    /// translating <c>localhost</c> / <c>127.0.0.1</c> to <c>host.docker.internal</c> so that the
+    /// containerised ToxiProxy can reach services running on the host machine.
+    /// </summary>
+    /// <param name="builder">The <see cref="IResourceBuilder{ToxiProxyResource}"/>.</param>
+    /// <param name="name">The name of the proxy resource.</param>
+    /// <param name="port">The host port the ToxiProxy listener will bind to.</param>
+    /// <param name="externalService">The external service to proxy.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{ToxicExternalServiceResource}"/>.</returns>
+    public static IResourceBuilder<ToxicExternalServiceResource> AddExternalServiceProxy(
+        this IResourceBuilder<ToxiProxyResource> builder,
+        [ResourceName] string name,
+        int port,
+        IResourceBuilder<ExternalServiceResource> externalService)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentNullException.ThrowIfNull(externalService);
+
+        var resource = new ToxicExternalServiceResource(name, builder.Resource, port, externalService);
+        builder.Resource.AddExternalServiceProxy(resource);
+
+        var healthCheckKey = $"{name}_check";
+        builder.ApplicationBuilder.Services.AddHealthChecks()
+            .AddAsyncCheck(healthCheckKey, async () =>
+                await CheckProxyHealth(builder, name));
+
+        return builder.ApplicationBuilder
+            .AddResource(resource)
+            .WithHealthCheck(healthCheckKey)
+            .WithEndpoint(targetPort: port, name: ExternalHttpEndpointResource.PrimaryEndpointName, scheme: "http", isExternal: true, isProxied: false)
+            .WithIconName("ArrowCircleDown");
+    }
+
+    /// <summary>
+    /// Injects a service-discovery environment variable into <paramref name="builder"/> so that
+    /// consuming resources resolve the proxied URL instead of the original external service URL.
+    /// The variable key uses the underlying external service's name, consistent with the convention
+    /// established by <see cref="WithReference{TDestination}(IResourceBuilder{TDestination},IResourceBuilder{ToxicHttpEndpointResource})"/>.
+    /// </summary>
+    /// <example>
+    /// Given an external service named <c>weather-api</c> proxied on port 8667 the variable
+    /// <c>services__weather-api__http__0 = http://localhost:8667</c> is injected.
+    /// </example>
+    public static IResourceBuilder<TDestination> WithReference<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        IResourceBuilder<ToxicExternalServiceResource> proxy)
+        where TDestination : IResourceWithEnvironment
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(proxy);
+
+        builder.WithEnvironment(context =>
+        {
+            var externalServiceName = proxy.Resource.TargetResource.Resource.Name;
+            var port = proxy.Resource.Port;
+            context.EnvironmentVariables[$"services__{externalServiceName}__http__0"] = $"http://localhost:{port}";
         });
         return builder;
     }
