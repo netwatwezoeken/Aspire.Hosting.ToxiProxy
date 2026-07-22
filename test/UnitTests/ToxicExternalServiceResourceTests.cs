@@ -1,3 +1,4 @@
+using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 
 namespace Aspire.Hosting.ToxiProxy.UnitTests;
@@ -74,6 +75,39 @@ public class ToxicExternalServiceResourceTests
         Assert.Equal(8667, parent.ExternalServiceResources[0].Port);
     }
 
+    [Fact]
+    public void NormalizeHost_ipv6_loopback_normalised()
+        => Assert.Equal("host.docker.internal",
+            ToxiProxyBuilderExtensions.NormalizeHost("::1"));
+
+    // ── Scenario: WithReference injects correct env var ──────────────────────
+
+    [Fact]
+    public void WithReference_injects_correct_env_var()
+    {
+        // Arrange
+        var parent   = new ToxiProxyResource("toxi");
+        var external = new ExternalServiceResource("weather-api", new Uri("http://api.weather.com:80"));
+        var resource = new ToxicExternalServiceResource("weatherProxy", parent, 8667, BuilderFor(external));
+
+        var consumer        = new StubConsumerResource("consumer");
+        var consumerBuilder = new StubConsumerBuilder(consumer);
+        var proxyBuilder    = new StubProxyBuilder(resource);
+
+        // Act – call the extension under test
+        consumerBuilder.WithReference(proxyBuilder);
+
+        // Invoke the env callback that was registered
+        var annotation = consumer.Annotations.OfType<EnvironmentCallbackAnnotation>().Single();
+        var envVars    = new Dictionary<string, object>();
+        var execCtx    = new DistributedApplicationExecutionContext(DistributedApplicationOperation.Run);
+        var ctx        = new EnvironmentCallbackContext(execCtx, envVars, CancellationToken.None);
+        annotation.Callback(ctx).GetAwaiter().GetResult();
+
+        // Assert
+        Assert.Equal("http://localhost:8667", ctx.EnvironmentVariables["services__weather-api__http__0"]?.ToString());
+    }
+
     // ── stub ─────────────────────────────────────────────────────────────────
 
     private sealed class StubExternalServiceBuilder(ExternalServiceResource resource)
@@ -85,6 +119,42 @@ public class ToxicExternalServiceResourceTests
             => throw new NotImplementedException();
 
         public IResourceBuilder<ExternalServiceResource> WithAnnotation<TAnnotation>(
+            TAnnotation annotation,
+            ResourceAnnotationMutationBehavior behavior = ResourceAnnotationMutationBehavior.Append)
+            where TAnnotation : IResourceAnnotation
+            => throw new NotImplementedException();
+    }
+
+    private sealed class StubConsumerResource(string name)
+        : Resource(name), IResourceWithEnvironment;
+
+    private sealed class StubConsumerBuilder(StubConsumerResource resource)
+        : IResourceBuilder<StubConsumerResource>
+    {
+        public StubConsumerResource Resource => resource;
+
+        public IDistributedApplicationBuilder ApplicationBuilder
+            => throw new NotImplementedException();
+
+        public IResourceBuilder<StubConsumerResource> WithAnnotation<TAnnotation>(
+            TAnnotation annotation,
+            ResourceAnnotationMutationBehavior behavior = ResourceAnnotationMutationBehavior.Append)
+            where TAnnotation : IResourceAnnotation
+        {
+            resource.Annotations.Add(annotation);
+            return this;
+        }
+    }
+
+    private sealed class StubProxyBuilder(ToxicExternalServiceResource resource)
+        : IResourceBuilder<ToxicExternalServiceResource>
+    {
+        public ToxicExternalServiceResource Resource => resource;
+
+        public IDistributedApplicationBuilder ApplicationBuilder
+            => throw new NotImplementedException();
+
+        public IResourceBuilder<ToxicExternalServiceResource> WithAnnotation<TAnnotation>(
             TAnnotation annotation,
             ResourceAnnotationMutationBehavior behavior = ResourceAnnotationMutationBehavior.Append)
             where TAnnotation : IResourceAnnotation

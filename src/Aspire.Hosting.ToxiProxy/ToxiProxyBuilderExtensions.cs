@@ -60,7 +60,7 @@ public static class ToxiProxyBuilderExtensions
     /// All other hostnames are returned unchanged.
     /// </summary>
     internal static string NormalizeHost(string host) =>
-        host is "localhost" or "127.0.0.1" ? "host.docker.internal" : host;
+        host is "localhost" or "127.0.0.1" or "::1" ? "host.docker.internal" : host;
 
     private static async Task ConfigureProxy(ToxicEndpointResource proxy, string upstream)
     {
