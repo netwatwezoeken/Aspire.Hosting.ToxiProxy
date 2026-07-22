@@ -58,6 +58,22 @@ public class ToxicExternalServiceResourceTests
         => Assert.Equal("host.docker.internal",
             ToxiProxyBuilderExtensions.NormalizeHost("127.0.0.1"));
 
+    // ── Scenario: AddExternalServiceProxy registers the resource ────────────
+
+    [Fact]
+    public void AddExternalServiceProxy_adds_to_collection()
+    {
+        var parent   = new ToxiProxyResource("toxi");
+        var external = new ExternalServiceResource("weather-api", new Uri("http://api.weather.com:80"));
+        var resource = new ToxicExternalServiceResource("weatherProxy", parent, 8667, BuilderFor(external));
+
+        parent.AddExternalServiceProxy(resource);
+
+        Assert.Single(parent.ExternalServiceResources);
+        Assert.Equal("weatherProxy", parent.ExternalServiceResources[0].Name);
+        Assert.Equal(8667, parent.ExternalServiceResources[0].Port);
+    }
+
     // ── stub ─────────────────────────────────────────────────────────────────
 
     private sealed class StubExternalServiceBuilder(ExternalServiceResource resource)

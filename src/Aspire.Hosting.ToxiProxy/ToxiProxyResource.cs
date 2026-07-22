@@ -15,9 +15,11 @@ public class ToxiProxyResource : ContainerResource
 
     private readonly List<ToxicHttpEndpointResource> _httpEndPointResources = [];
     private readonly List<ToxicConnectionStringResource> _connectionsStringResources = [];
+    private readonly List<ToxicExternalServiceResource> _externalServiceResources = [];
 
     internal IReadOnlyList<ToxicHttpEndpointResource> HttpEndPointResources => _httpEndPointResources;
     internal IReadOnlyList<ToxicConnectionStringResource> ConnectionStringResources => _connectionsStringResources;
+    internal IReadOnlyList<ToxicExternalServiceResource> ExternalServiceResources => _externalServiceResources;
 
     internal void AddHttpProxy(ToxicHttpEndpointResource toxicHttpEndpoint)
     {
@@ -36,12 +38,28 @@ public class ToxiProxyResource : ContainerResource
     {
         _connectionsStringResources.Add(toxicConnectionString);
         // Add the endpoint to ToxiProxyResource so it appears in the dashboard
-
+        
         Annotations.Add(new EndpointAnnotation(
             System.Net.Sockets.ProtocolType.Tcp,
             uriScheme: "tcp",
             name: toxicConnectionString.Name,
             port: toxicConnectionString.Port,
             targetPort: toxicConnectionString.Port));
+    }
+
+    /// <summary>
+    /// Registers a <see cref="ToxicExternalServiceResource"/> on this ToxiProxy container
+    /// and adds an HTTP endpoint annotation so the proxy port appears in the Aspire dashboard.
+    /// </summary>
+    internal void AddExternalServiceProxy(ToxicExternalServiceResource toxicExternalService)
+    {
+        _externalServiceResources.Add(toxicExternalService);
+        // Add the endpoint to ToxiProxyResource so it appears in the dashboard
+        Annotations.Add(new EndpointAnnotation(
+            System.Net.Sockets.ProtocolType.Tcp,
+            uriScheme: "http",
+            name: toxicExternalService.Name,
+            port: toxicExternalService.Port,
+            targetPort: toxicExternalService.Port));
     }
 }
