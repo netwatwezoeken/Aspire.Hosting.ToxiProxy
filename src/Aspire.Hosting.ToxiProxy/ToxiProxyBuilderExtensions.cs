@@ -48,6 +48,15 @@ public static class ToxiProxyBuilderExtensions
             });
     }
 
+    /// <summary>
+    /// Normalises a hostname for use as a ToxiProxy upstream target running inside Docker.
+    /// <c>localhost</c> and <c>127.0.0.1</c> are translated to <c>host.docker.internal</c>
+    /// so that the containerised ToxiProxy can reach services on the host machine.
+    /// All other hostnames are returned unchanged.
+    /// </summary>
+    internal static string NormalizeHost(string host) =>
+        host is "localhost" or "127.0.0.1" ? "host.docker.internal" : host;
+
     private static async Task ConfigureProxy(ToxicEndpointResource proxy, int targetPort)
     {
         var toxiProxyUrl = proxy.Parent.PrimaryEndpoint.Url;
