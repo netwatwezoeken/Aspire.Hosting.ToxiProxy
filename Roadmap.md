@@ -1,80 +1,11 @@
 # ToxiProxy Integration — Feature Roadmap & Design
 
 Canonical project: `src/Aspire.Hosting.ToxiProxy`. All file paths below are
-relative to it unless noted. Design targets the **straightforward API**
-(`AddHttpProxy` / `AddConnectionStringProxy`); the low-impact `WithToxicity` /
-`.With()` overloads are treated as deprecated (see §6).
+relative to it unless noted.
 
 All new toxic methods hang off `ToxicEndpointResource` (via the existing generic
 `where TResource : ToxicEndpointResource` constraint), so a single
 implementation serves both HTTP and connection-string proxies.
-
----
-
-## Priority 1 — Complete the toxic set
-
-**Why first:** the enum already advertises these types, but `ConfigureProxy`
-silently ignores everything except latency/bandwidth. This is the core
-"ToxiProxy has more toxics" ask and the highest value-to-effort work.
-
-### 1a. Data model changes
-
-**`Parameters.cs`** — extend to carry every toxic's inputs (keep nullable so
-unused ones serialize away):
-
-```csharp
-public record Parameters(
-    int? Latency = null,
-    int? Jitter = null,
-    int? Bandwidth = null,    // KB/s (maps to attribute "rate")
-    int? Delay = null,        // slow_close, slicer (µs for slicer)
-    int? Timeout = null,      // timeout, reset_peer (ms)
-    int? AverageSize = null,  // slicer, bytes
-    int? SizeVariation = null,// slicer, bytes
-    long? Bytes = null        // limit_data
-);
-```
-
-**`Client/ToxiClient.cs` -> `Attributes`** — add the missing wire fields with
-correct snake_case JSON names (ToxiProxy attributes are snake_case; current
-`Rate`/`Latency` rely on default camelCase which happens to match — the new ones
-must be explicit):
-
-```csharp
-public record Attributes(
-    int? Latency = null,
-    int? Jitter = null,
-    int? Timeout = null,
-    int? Rate = null,
-    int? Delay = null,
-    [property: JsonPropertyName("average_size")] int? AverageSize = null,
-    [property: JsonPropertyName("size_variation")] int? SizeVariation = null,
-    long? Bytes = null
-);
-```
-
-Note: verify serialization uses snake_case only where ToxiProxy expects it
-(`average_size`, `size_variation`); `latency`, `jitter`, `timeout`, `rate`,
-`delay`, `bytes` are already single-word lowercase.
-
-### 1b. Builder methods (in `ToxiProxyBuilderExtensions.cs`)
-
-Mirror the existing `AddLatency` / `AddBandwidthLimit` shape (generic,
-`toxicity` + `direction` defaults):
-
-| Method | Signature (params after `name`) | ToxicType | Attributes set |
-|---|---|---|---|
-| `AddSlowClose` | `int delay` | `SlowClose` | `Delay` |
-| `AddTimeout` | `int timeout` | `Timeout` | `Timeout` |
-| `AddResetPeer` | `int timeout = 0` | `ResetPeer` | `Timeout` |
-| `AddSlicer` | `int averageSize, int sizeVariation = 0, int delay = 0` | `Slicer` | `AverageSize`, `SizeVariation`, `Delay` |
-| `AddLimitData` | `long bytes` | `LimitData` | `Bytes` |
-
-Each follows the existing pattern: build `Toxic`, wrap in `ToxicResource`, call
-`builder.Resource.AddToxic(...)`, return `builder`.
-
-**Tests:** extend `test/AppHost/AppHost.cs` with one of each new toxic and
-regenerate the Verify snapshot (`Test.Check_toxiproxy_config.verified.txt`).
 
 ---
 
@@ -83,7 +14,7 @@ regenerate the Verify snapshot (`Test.Check_toxiproxy_config.verified.txt`).
 These are latent correctness bugs; worth doing before broadening surface area so
 new features build on solid ground.
 
-### 2a. Idempotent proxy population (`/populate`)
+### 1a. Idempotent proxy population (`/populate`)
 
 `CreateProxy` (`POST /proxies`) fails if a proxy already exists (re-run, hot
 reload, or a pre-populated server). Add
@@ -92,7 +23,7 @@ populate all proxies in one call inside `OnResourceReady`, then add toxics. This
 is the ToxiProxy-recommended startup pattern and removes ordering/duplicate
 errors.
 
-### 2b. Replace hard-coded `host.docker.internal`
+### 1b. Replace hard-coded `host.docker.internal`
 
 In `ConfigureProxy`, the upstream is `host.docker.internal:{targetPort}`. This
 breaks on Linux Docker (no such host by default) and misrepresents
@@ -106,7 +37,7 @@ container-to-container targets. Design options to evaluate:
 Flag this for a decision during implementation; at minimum make the host a
 single constant/config point rather than inline literals in two code paths.
 
-### 2c. `IToxiClient` completeness (needed by Priority 3)
+### 1c. `IToxiClient` completeness (needed by Priority 3)
 
 Add the endpoints required for runtime control and health:
 
@@ -117,7 +48,7 @@ Add the endpoints required for runtime control and health:
 [Post("/reset")]                      Task Reset();
 ```
 
-### 2d. Parent null-safety & attach validation
+### 1d. Parent null-safety & attach validation
 
 `ToxicEndpointResource.Parent` is non-nullable but assigned late. In the
 straightforward API it's always set (constructor takes the parent), but the
@@ -131,7 +62,7 @@ deprecated, but is cheap insurance.)
 
 ---
 
-## Priority 3 — Runtime control via Aspire dashboard commands
+## Priority 2 — Runtime control via Aspire dashboard commands
 
 **Why third:** depends on the client methods from 2c. Delivers the README
 "Ideas" (pause/control toxics & proxies) using the Aspire-native `WithCommand`
@@ -169,7 +100,7 @@ only command at the proxy level. Recommend proxy-level first.
 
 ---
 
-## Priority 4 — Broader connection-string support
+## Priority 3 — Broader connection-string support
 
 **Why last:** highest risk of provider-specific edge cases; benefits from the
 idempotent/robust foundation above.
@@ -249,12 +180,10 @@ end-to-end Verify coverage.
 
 ## Suggested sequencing
 
-1. **P1 toxics** (self-contained, immediate value, unblocks a full README status
-   matrix).
-2. **P2 robustness** (client methods + populate + host fix) — foundation.
-3. **P3 dashboard commands** (depends on P2c) — delivers the "control" ideas and
+2. **P1 robustness** (client methods + populate + host fix) — foundation.
+3. **P2 dashboard commands** (depends on P2c) — delivers the "control" ideas and
    "down".
-4. **P4 connection-string breadth + external TCP + optional port** (largest,
+4. **P3 connection-string breadth + external TCP + optional port** (largest,
    riskiest, most provider testing).
 
 ## Out of scope (per selections)
@@ -272,4 +201,4 @@ end-to-end Verify coverage.
 
 ## Related documents
 
-- `Testing-Plan.md` — how each of P1–P4 is covered by the test pyramid.
+- `Testing-Plan.md` — how each of item is covered by the test pyramid.

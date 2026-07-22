@@ -12,10 +12,6 @@ Before I spend time on further completing the functionality I prefer some feedba
 
 ## Usage Example
 
-There are two ways to add ToxiProxy to your AppHost.
-One is the low impact API, and a straightforward version that actually represents the technology a bit better.
-At the time of writing I have not yet decided to keep them both or which one to keep. Any thoughts or feedback is welcome!
-
 You might already have `AppHost`:
 
 ```csharp
@@ -31,30 +27,8 @@ builder.AddProject<Projects.DemoApi>("demoapi")
 
 builder.Build().Run();
 ```
-### Low impact API
 
-```csharp
-var builder = DistributedApplication.CreateBuilder(args);
-
-// Add toxicity and a specified latency
-var pgsql = builder.AddPostgres("postgres")
-    .AddDatabase("postgresdb")
-        .WithToxicity("pgsqlProxy", 8669)
-        .AddLatency("latency", 123, 0, 0.75, Direction.Upstream);
-
-// Add the ToxiProxy server and attach the database proxy
-var proxy = builder.AddToxiProxyServer("toxiproxy")
-                   .With(pgsql);
-
-// This remains unchanged
-builder.AddProject<Projects.DemoApi>("demoapi")
-    .WithReference(pgsql);
-
-builder.Build().Run();
-```
-
-### Straight forward API
-
+To add ToxiProxy in between:
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -186,15 +160,15 @@ Attach a `ToxicConnectionStringResource` or `ToxicEndpointResource` to the `Toxi
     - ❓ MySql
     - ❓ MariaDB
 - [ ] Get rid of the need to specify a port. `proxy.AddHttpProxy("apiProxy", weatherapi)` should be sufficient instead of `proxy.AddHttpProxy("apiProxy", 8666, weatherapi)`
-- [ ] Support to create a toxic for an arbitrary (external) tcp based service.
-- [ ] Supported toxic types
+- [ ] Support to create a toxics on Aspires AddExternalService.
+- ✅ Supported toxic types
   - ✅ latency
   - ✅ bandwidth
-  - ❌ slow_close
-  - ❌ timeout
-  - ❌ reset_peer
-  - ❌ slicer
-  - ❌ limit_data
+  - ✅ slow_close
+  - ✅ timeout
+  - ✅ reset_peer
+  - ✅ slicer
+  - ✅ limit_data
 - [ ] HealthChecks
 - [ ] WaitFor()
 

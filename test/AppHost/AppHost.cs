@@ -8,15 +8,9 @@ var weatherapi =  builder.AddProject<Projects.WeatherApi>("weatherapi");
 
 var mssql = BuildMsSql(builder, "SqlDatabase");
 
-// You can add toxicity to a ConnectionsStringResource
-var pgsql = BuildPgSql(builder, "postgresdb")
-    .WithToxicity("pgsqlProxy", 8669)
-    .AddLatency("latency", 123, 0, 0.75, Direction.Upstream)
-    .AddSlowClose("slowclose", 150, 0.75, Direction.Upstream)
-    .AddResetPeer("resetpeer", 250, 0.6, Direction.Upstream);
+var pgsql = BuildPgSql(builder, "postgresdb");
 
-var proxy = builder.AddToxiProxyServer("toxiproxy", 8474)
-    .With(pgsql);
+var proxy = builder.AddToxiProxyServer("toxiproxy", 8474);
 
 // no UI improves test performance
 if (!isTestRun)
@@ -37,6 +31,11 @@ var toxicWeather = proxy.AddHttpProxy("weatherapiProxy", 8666, weatherapi)
     .AddBandwidthLimit("bandwidth",12, 0.85, Direction.Downstream)
     .AddLimitData("limitdata", 1048576, 0.7, Direction.Downstream)
     .AddPacketLoss("packetloss", 0.2, 0.1, 0.8, Direction.Downstream);
+
+var toxicPgSql = proxy.AddConnectionStringProxy("pgsqlProxy", 8669, pgsql)
+    .AddLatency("latency", 123, 0, 0.75, Direction.Upstream)
+    .AddSlowClose("slowclose", 150, 0.75, Direction.Upstream)
+    .AddResetPeer("resetpeer", 250, 0.6, Direction.Upstream);
 
 var assemblyLocation = Assembly.GetExecutingAssembly().Location;
 var locustConfigDirectory = Path.Join(Path.GetDirectoryName(assemblyLocation), "../../../../../test/AppHost/locust");
