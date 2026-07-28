@@ -1,0 +1,45 @@
+###
+GET http://localhost:8474/proxies
+
+###
+GET http://localhost:8474/proxies/weatherapiProxy/toxics/latency
+
+###
+POST http://localhost:8474/proxies/weatherapiProxy/toxics
+Content-Type: application/json
+
+{
+  "attributes": {
+    "delay" : 500
+  },
+  "name": "SlowClose",
+  "type": "slow_close",
+  "stream": "downstream",
+  "toxicity": 0.8
+}
+
+###
+POST http://localhost:8474/proxies/weatherapiProxy/toxics
+Content-Type: application/json
+
+{
+  "attributes": {
+  },
+  "name": "reset_peer",
+  "type": "reset_peer",
+  "stream": "downstream",
+  "toxicity": 0.8
+}
+
+###
+POST http://localhost:8474/proxies/weatherapiProxy/toxics/reset_peer
+Content-Type: application/json
+
+{
+  "attributes": {
+  },
+  "name": "reset_peer",
+  "type": "reset_peer",
+  "stream": "downstream",
+  "toxicity": 0.8
+}

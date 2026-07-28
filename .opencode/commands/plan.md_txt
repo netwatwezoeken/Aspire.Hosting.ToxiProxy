@@ -1,0 +1,6 @@
+---
+description: plan step of the agentic dev workflow
+agent: planner
+---
+
+This is the plan step  of the `/specs`→`/plan`→`/build` workflow

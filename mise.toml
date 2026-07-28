@@ -1,0 +1,6 @@
+[tools]
+python = "3.11"
+
+[hooks]
+enter = "mise up"
+

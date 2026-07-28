@@ -1,0 +1,40 @@
+---
+description: >-
+  Create a structured talk about a given subject
+agent: build
+---
+
+# Abstract creation
+
+You have been invoked with the `/abstract` command.
+
+This command produces a talk abstract artifact.
+
+## Output
+
+The out putis an abstract to submit to call for papers for conferences. Additionaly there is an additional peice of text intende for the conference organizers to explain why this talk matters for that conference.
+
+### Persist to file
+
+After the gate passes, write the artifact to a markdown file. Downstream commands (`/slides`) find use this file — chat-only data is lost between sessions.
+
+1. **Slugify** the feature name: lowercase, replace spaces with hyphens, strip special characters. ("User Login with MFA" → `user-login-with-mfa`)
+2. **Create** `docs/talks/abstracts/` if missing.
+3. **Check** whether `docs/talks/abstracts/<slug>.md` already exists. If yes, ask: overwrite or create a versioned file (`<slug>-v2.md`)?
+4. **Write** using this structure:
+```markdown
+# Title: <Title of the talk>
+
+## Abstract
+<the abstract>
+
+## Level
+<beginner, intermediate or advanced>
+
+## Intended audience
+<a description of the target audience>
+
+## Addtional notes
+<notes to conference organizers>
+```
+1. **Print** the file path to chat so the user can find it.

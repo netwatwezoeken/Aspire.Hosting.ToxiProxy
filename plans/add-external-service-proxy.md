@@ -129,10 +129,10 @@ in `ToxiProxyBuilderExtensions`.
 ### Slices (grouped by wave)
 
 #### Wave 1
-- [ ] Slice 1: ToxicExternalServiceResource class and host normalization
-  - [ ] Step 1.1: Create ToxicExternalServiceResource and NormalizeHost
+- [x] Slice 1: ToxicExternalServiceResource class and host normalization
+  - [x] Step 1.1: Create ToxicExternalServiceResource and NormalizeHost
 
 #### Wave 2
-- [ ] Slice 2: Builder pipeline wiring
-  - [ ] Step 2.1: Add external service list to ToxiProxyResource
-  - [ ] Step 2.2: Extension method, ConfigureProxy refactor, and WithReference
+- [x] Slice 2: Builder pipeline wiring
+  - [x] Step 2.1: Add external service list to ToxiProxyResource
+  - [x] Step 2.2: Extension method, ConfigureProxy refactor, and WithReference

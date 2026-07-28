@@ -1,0 +1,23 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "plan": {
+      "color": "#b8d7a3",
+      "permission": {
+        "edit": {
+          "*": "deny",
+          "plans/**": "allow",
+          "features/**": "allow"
+        }
+      }
+    },
+    "explore": {
+      "permission": {
+        "serena*": "allow"
+      }
+    }
+  },
+  "experimental": {
+    "primary_tools": ["switch_mode"]
+  }
+}

@@ -1,0 +1,1 @@
+{"timestamp":"2026-07-22T00:00:00Z","type":"approval","trigger":"user","description":"Spec approved for AddExternalServiceProxy feature (Phase 1 → 2)","proposed":"Implement AddExternalServiceProxy per docs/specs/add-external-service-proxy.md","evidence_shown":["docs/specs/add-external-service-proxy.md"],"risks_surfaced":[]}
